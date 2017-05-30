@@ -88,19 +88,26 @@ x = (1:size(val, 2)) * interval;
 
 x=x';
 val=val';
+% for j = 1:size(x, 1)-2
+%     val1(j) = ((val(j+2,2) -val(j+1,2)) / (x(j+2) - x(j+1)))* (x(j) - x(j+1)) + val(j+1,2);
+% end
+
+
+% val1=val1';
 % val1=x;
 % 
 % for j = 1:1:1000
 %      val1(j) = (val(j, 3) + val(j+1, 3))/3;
 % end
 
+range = 750000;
 
-
-plot(x(1:1000), val(1:1000,1));
+plot(x(1:range), val(1:range,1));
 hold on
-plot(x(1:1000), val(1:1000,3),'r');
+plot(x(1:range), val(1:range,3),'r');
 hold on
-% plot(x(1:1000), val1(1:1000),'c');
+% plot(x(1:range), val1(1:range),'c');
+hold on
 for i = 1:length(signal)
     labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
 end
@@ -110,7 +117,8 @@ xlabel('Time (sec)');
 grid on;
 
 hold off
-% plot(x1(1:1000), val1(1:1000),'c');
+% figure(2)
+% plot(x(1:1000), val1(1:1000),'c');
 
 
 %%
