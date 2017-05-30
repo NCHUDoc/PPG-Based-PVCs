@@ -1,10 +1,130 @@
-%%
+%%  20170529 - show all data by PlotATM
 clc;
 close all;
 clear;
 plotATM('039m');
 
+%% 20170530 - show 8 seconds data
+clc;
+close all;
+clear;
+Name ='039m';
+infoName = strcat(Name, '.info');
+matName = strcat(Name, '.mat');
+
+load(matName);
+fid = fopen(infoName, 'rt');
+fgetl(fid);
+fgetl(fid);
+fgetl(fid);
+[freqint] = sscanf(fgetl(fid), 'Sampling frequency: %f Hz  Sampling interval: %f sec');
+interval = freqint(2);
+fgetl(fid);
+    for i = 1:size(val, 1)
+      [row(i), signal(i), gain(i), base(i), units(i)]=strread(fgetl(fid),'%d%s%f%f%s','delimiter','\t');
+    end
+ 
+fclose(fid);
+val(val==-32768) = NaN;
+
+
+for i = 1:size(val, 1)
+    val(i, :) = (val(i, :) - base(i)) / gain(i);
+end
+
+
+x = (1:size(val, 2)) * interval;
+
+x=x';
+val=val';
+plot(x(1:1000), val(1:1000,1));
+hold on
+plot(x(1:1000), val(1:1000,3),'r');
+
+for i = 1:length(signal)
+    labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
+end
+legend(labels{1,1},labels{1,3});
+
+xlabel('Time (sec)');
+grid on;
+%% Interpolation to 500Hz
+% https://www.google.com.tw/url?sa=t&rct=j&q=&esrc=s&source=web&cd=13&ved=0ahUKEwjnkLL_npfUAhVDoZQKHRsmAjcQFgiAATAM&url=https%3A%2F%2Fmirlab.org%2Fjang%2Fbooks%2FmatlabProgramming4guru%2Fslide%2F09-%25E5%2585%25A7%25E6%258F%2592%25E6%25B3%2595.ppt&usg=AFQjCNF1yMD4McCGM7iTxCQuqiNDQAZo5Q
+% http://blog.sina.com.cn/s/blog_4c7482f101009vm2.html
+
+clc;
+close all;
+clear;
+Name ='039m';
+infoName = strcat(Name, '.info');
+matName = strcat(Name, '.mat');
+
+
+load(matName);
+fid = fopen(infoName, 'rt');
+fgetl(fid);
+fgetl(fid);
+fgetl(fid);
+[freqint] = sscanf(fgetl(fid), 'Sampling frequency: %f Hz  Sampling interval: %f sec');
+interval = freqint(2);
+fgetl(fid);
+    for i = 1:size(val, 1)
+      [row(i), signal(i), gain(i), base(i), units(i)]=strread(fgetl(fid),'%d%s%f%f%s','delimiter','\t');
+    end
+ 
+fclose(fid);
+val(val==-32768) = NaN;
+
+
+for i = 1:size(val, 1)
+    val(i, :) = (val(i, :) - base(i)) / gain(i);
+end
+
+for i = 1:size(val, 1)
+    val(i, :) = (val(i, :) - base(i)) / gain(i);
+end
+
+x = (1:size(val, 2)) * interval;
+
+x=x';
+val=val';
+% val1=x;
+% 
+% for j = 1:1:1000
+%      val1(j) = (val(j, 3) + val(j+1, 3))/3;
+% end
+
+
+
+plot(x(1:1000), val(1:1000,1));
+hold on
+plot(x(1:1000), val(1:1000,3),'r');
+hold on
+% plot(x(1:1000), val1(1:1000),'c');
+for i = 1:length(signal)
+    labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
+end
+legend(labels{1,1},labels{1,3});
+
+xlabel('Time (sec)');
+grid on;
+
+hold off
+% plot(x1(1:1000), val1(1:1000),'c');
+
+
 %%
+% x = 0:1:4*pi;  
+% y = sin(x).*exp(-x/5);  
+% xi = 0:0.1:4*pi;  
+% y1 = interp1(x, y, xi, 'nearest');  
+% y2 = interp1(x, y, xi, 'linear');  
+% y3 = interp1(x, y, xi, 'pchip');  
+% y4 = interp1(x, y, xi, 'spline');  
+% plot(x, y, 'o', xi, y1, xi, y2, xi, y3, xi, y4);  
+% legend('Original', 'Nearest', 'Linear', 'Pchip', 'Spline');
+
+% grid on
 % % display('***This example will write a  Ex1.dat and Ex1.hea file to your current directory!')
 % s=input('Hit "ctrl + c" to quit or "Enter" to continue!');
 % 
