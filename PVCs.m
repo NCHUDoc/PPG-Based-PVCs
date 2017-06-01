@@ -80,10 +80,6 @@ for i = 1:size(val, 1)
     val(i, :) = (val(i, :) - base(i)) / gain(i);
 end
 
-for i = 1:size(val, 1)
-    val(i, :) = (val(i, :) - base(i)) / gain(i);
-end
-
 x = (1:size(val, 2)) * interval;
 x=x';
 val=val';
@@ -196,7 +192,12 @@ sum(beat)
 % 
 % so_chan(val16000sf(2000001:3000000),Fs) 
 % 
-% % Method 2:
+% Method 2:
+
+
+
+
+
 % 
 % [R, Rt] = findpeaks(val16000sf);                 % Find R-Waves & Times
 % % EKGf=(fix(val16000sf));
