@@ -182,19 +182,27 @@ ylabel('Amp (mv)');
 
 % Method 1:
 Fs=500;
- so_chan(val16000sf(1:1000000),Fs) 
+for i=1:30
+    so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
+    ansx{i} = ans{:};
+end
 
-so_chan(val16000sf(1000001:2000000),Fs) 
-
-so_chan(val16000sf(2000001:3000000),Fs) 
-
-% Method 2:
-
-[R, Rt] = findpeaks(val16000sf);                 % Find R-Waves & Times
-% EKGf=(fix(val16000sf));
-% [R, Rt] = findpeaks(EKGf, Fs, 'MinPeakHeight',500);
-figure(3)                                                           % Plot Filtered EKG
-plot(x16000s(1:3000),val16000sf(1:3000),'y');
+for i=1:30
+beat(i) = length(ansx{i})
+end
+sum(beat)
+% 
+% so_chan(val16000sf(1000001:2000000),Fs) 
+% 
+% so_chan(val16000sf(2000001:3000000),Fs) 
+% 
+% % Method 2:
+% 
+% [R, Rt] = findpeaks(val16000sf);                 % Find R-Waves & Times
+% % EKGf=(fix(val16000sf));
+% % [R, Rt] = findpeaks(EKGf, Fs, 'MinPeakHeight',500);
+% figure(3)                                                           % Plot Filtered EKG
+% plot(x16000s(1:3000),val16000sf(1:3000),'y');
 
 % grid on
 % % display('***This example will write a  Ex1.dat and Ex1.hea file to your current directory!')
@@ -235,3 +243,9 @@ plot(x16000s(1:3000),val16000sf(1:3000),'y');
 % plot(sig)
 % subplot(212)
 % plot(x(:,1),x(:,2));hold on;plot(x(:,1),x(:,3),'k');plot(x(:,1),x(:,4),'r')
+
+%%
+Fs=500;
+ i=30
+    so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
+    ansy{i} = ans{:};

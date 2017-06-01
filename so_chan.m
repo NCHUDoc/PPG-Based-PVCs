@@ -59,9 +59,12 @@ title('Original signal');
 xlabel('Time [s]');
 
 %% Lowpass filter (4th-order Butterworth, Fc = 100 Hz)
-[b, a] = butter(4, 50/(Fs/2));
-X1 = filtfilt(b, a, X);
-
+% [b, a] = butter(4, 50/(Fs/2));
+% X1 = filtfilt(b, a, X);
+% [b, a] = butter(4, 50/(Fs/2));
+% X1 = filtfilt(b, a, X);
+b = fir1(16,[0.00055 0.22223]);
+X1=filter(b,1,X);
 ax2 = subplot(4,1,2);
 plot( Ts, X1 );
 title('Lowpass-filtered signal (4th-order Butterworth, Fc = 100 Hz)');
@@ -80,7 +83,7 @@ notchPoles = (1-notchWidth) * notchZeros;
 b = poly(notchZeros);
 a = poly(notchPoles);
 
-X1 = filtfilt(b, a, X1);
+% X1 = filtfilt(b, a, X1);
 
 ax3 = subplot(4,1,3);
 plot( Ts, X1 );
