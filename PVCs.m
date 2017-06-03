@@ -2,13 +2,13 @@
 clc;
 close all;
 clear;
-plotATM('039m');
+plotATM('212m');
 
 %% 20170530 - show 8 seconds data
 clc;
 close all;
 clear;
-Name ='039m';
+Name ='212m';
 infoName = strcat(Name, '.info');
 matName = strcat(Name, '.mat');
 
@@ -39,12 +39,12 @@ x=x';
 val=val';
 plot(x(1:1000), val(1:1000,1));
 hold on
-plot(x(1:1000), val(1:1000,3),'r');
+plot(x(1:1000), val(1:1000,6),'r');
 
 for i = 1:length(signal)
     labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
 end
-legend(labels{1,1},labels{1,3});
+legend(labels{1,1},labels{1,6});
 
 xlabel('Time (sec)');
 grid on;
@@ -55,7 +55,7 @@ grid on;
 clc;
 close all;
 clear;
-Name ='039m';
+Name ='212m';
 infoName = strcat(Name, '.info');
 matName = strcat(Name, '.mat');
 
@@ -87,7 +87,7 @@ val=val';
 %     val1(j) = ((val(j+2,2) -val(j+1,2)) / (x(j+2) - x(j+1)))* (x(j) - x(j+1)) + val(j+1,2);
 % end
 val1 = interp(val(:,1),4);
-val3 = interp(val(:,3),4);
+val6 = interp(val(:,6),4);
 x1 = interp(x,4);
 % https://cn.mathworks.com/help/signal/ref/interp.html
 % t = 0:0.001:1;
@@ -107,10 +107,10 @@ x1 = interp(x,4);
 range = 1000; 
 plot(x(1:range), val(1:range,1));
 hold on
-plot(x(1:range), val(1:range,3),'r');
+plot(x(1:range), val(1:range,6),'r');
 hold on
 plot(x1(1:4*range), val1(1:4*range),'cx');
-plot(x1(1:4*range), val3(1:4*range),'y+');
+plot(x1(1:4*range), val6(1:4*range),'y+');
 hold on
 for i = 1:length(signal)
     labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
@@ -129,11 +129,11 @@ hold off
 figure(1)
 range = 750000*4; 
 val16000s = val1(1:range);
-val36000s = val3(1:range);
+val66000s = val6(1:range);
 x16000s = x1(1:range);
 plot(x16000s(1:1000),val16000s(1:1000));
 hold on;
-plot(x16000s(1:1000),val36000s(1:1000),'r');
+plot(x16000s(1:1000),val66000s(1:1000),'r');
 grid on;
 xlabel('Time (sec)');
 % hold off;
@@ -161,15 +161,15 @@ freqz(b)
 figure(3)
 B= val16000s; 
 val16000sf = filter(b,1,B);
-Bp= val36000s; 
-val36000sf = filter(b,1,Bp);
+Bp= val66000s; 
+val66000sf = filter(b,1,Bp);
 plot(x16000s(1:3000),val16000s(1:3000));
 hold on;
-plot(x16000s(1:3000),val36000s(1:3000),'r');
+plot(x16000s(1:3000),val66000s(1:3000),'r');
 hold on;
 plot(x16000s(1:3000),val16000sf(1:3000),'c');
 hold on;
-plot(x16000s(1:3000),val36000sf(1:3000),'y');
+plot(x16000s(1:3000),val66000sf(1:3000),'y');
 grid on;
 xlabel('Time (sec)');
 ylabel('Amp (mv)');
@@ -200,16 +200,157 @@ sum(beat)
 
 Mso_chan2(val16000sf,Fs) 
 
-    
+ % Method 3: 
  
+ [pks,locs]=findpeaks(val16000sf,'MinPeakHeight',0.3);
+ 
+fprintf('Find Peaks = %d\n',length(pks));
  %%  20170603 - show seperate data by PlotATM
 clc;
 close all;
 clear;
-
+figure(1)
 plotATM('212mp');
 
 hold on;
 plotATM('212me');
+hold off
+%%   
+clc;
+close all;
+clear;
+Name ='212me';
+infoName = strcat(Name, '.info');
+matName = strcat(Name, '.mat');
+
+load(matName);
+fid = fopen(infoName, 'rt');
+fgetl(fid);
+fgetl(fid);
+fgetl(fid);
+[freqint] = sscanf(fgetl(fid), 'Sampling frequency: %f Hz  Sampling interval: %f sec');
+interval = freqint(2);
+fgetl(fid);
+    for i = 1:size(val)
+      [row(i), signal(i), gain(i), base(i), units(i)]=strread(fgetl(fid),'%d%s%f%f%s','delimiter','\t');
+    end
+ 
+fclose(fid);
+val(val==-32768) = NaN;
+
+
+% for i = 1:size(val, 1)
+    vale(i, :) = (val(i, :) - base(i)) / gain(i);
+% end
+
+
+x = (1:length(vale)) * interval;
+
+x=x';
+vale=vale';
+% plot(x(1:1000), val(1:1000,1));
+% hold on
+% plot(x(1:1000), val(1:1000,3),'r');
+plot(x, vale);
 hold on
-    
+    ecg = strcat(signal{i}, ' (', units{i}, ')'); 
+% legend(labels{1});
+labels{1} =ecg;
+xlabel('Time (sec)');
+grid on;
+
+
+
+Name2 ='212mp';
+infoName2 = strcat(Name2, '.info');
+matName2 = strcat(Name2, '.mat');
+load(matName2);
+fid2 = fopen(infoName2, 'rt');
+fgetl(fid2);
+fgetl(fid2);
+fgetl(fid2);
+[freqint2] = sscanf(fgetl(fid2), 'Sampling frequency: %f Hz  Sampling interval: %f sec');
+interval2 = freqint2(2);
+fgetl(fid2);
+    for i = 1:size(val)
+      [row(i), signal2(i), gain(i), base(i), units(i)]=strread(fgetl(fid),'%d%s%f%f%s','delimiter','\t');
+    end
+ 
+fclose(fid);
+val(val==-32768) = NaN;
+
+ valp(i, :) = (val(i, :) - base(i)) / gain(i);
+% end
+
+
+xp = (1:length(valp)) * interval;
+
+xp=xp';
+valp=valp';
+plot(xp, valp,'r');
+hold off;
+for i = 1:length(signal2)
+    ppg = strcat(signal2{i}, ' (', units{i}, ')'); 
+end
+labels{2} = ppg;
+legend(labels{1} ,labels{2});
+
+%%
+
+clc;
+close all;
+clear;
+Name ='212me1hr';
+infoName = strcat(Name, '.info');
+matName = strcat(Name, '.mat');
+
+load(matName);
+fid = fopen(infoName, 'rt');
+fgetl(fid);
+fgetl(fid);
+fgetl(fid);
+[freqint] = sscanf(fgetl(fid), 'Sampling frequency: %f Hz  Sampling interval: %f sec');
+interval = freqint(2);
+fgetl(fid);
+    for i = 1:size(val)
+      [row(i), signal(i), gain(i), base(i), units(i)]=strread(fgetl(fid),'%d%s%f%f%s','delimiter','\t');
+    end
+ 
+fclose(fid);
+val(val==-32768) = NaN;
+
+
+% for i = 1:size(val, 1)
+    vale(i, :) = (val(i, :) - base(i)) / gain(i);
+% end
+
+
+x = (1:length(vale)) * interval;
+
+x=x';
+vale=vale';
+% plot(x(1:1000), val(1:1000,1));
+% hold on
+% plot(x(1:1000), val(1:1000,3),'r');
+plot(x, vale);
+hold on
+    ecg = strcat(signal{i}, ' (', units{i}, ')'); 
+% legend(labels{1});
+labels{1} =ecg;
+xlabel('Time (sec)');
+grid on;
+legend(labels{1});
+
+%%
+
+Fs=125;
+
+    Mso_chan1(vale,Fs) 
+
+%     Fs=250;
+Mso_chan2(vale,Fs) 
+
+% [pks,locs] = findpeaks(data)        % Find peaks and their indices
+[pks,locs]=findpeaks(vale,'MinPeakHeight',0.3);
+  plot(vale,'Color','blue'); hold on;
+%   plot(locs,vale(locs),'k^','markerfacecolor',[1 0 0]);
