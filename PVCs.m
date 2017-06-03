@@ -125,7 +125,7 @@ grid on;
 hold off
 % figure(2)
 % plot(x(1:1000), val1(1:1000),'c');
-%% Preprocessing
+%% Preprocessing (filtering)
 figure(1)
 range = 750000*4; 
 val16000s = val1(1:range);
@@ -179,7 +179,7 @@ ylabel('Amp (mv)');
 % Method 1:
 Fs=500;
 for i=1:30
-    so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
+    Mso_chan1(val16000sf(1+(i-1)*100000:i*100000),Fs) 
     ansx{i} = ans{:};
 end
 
@@ -192,61 +192,24 @@ sum(beat)
 % 
 % so_chan(val16000sf(2000001:3000000),Fs) 
 % 
+% Fs=500;
+%  i=30
+%     so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
+%     ansy{i} = ans{:};
 % Method 2:
 
+Mso_chan2(val16000sf,Fs) 
 
+    
+ 
+ %%  20170603 - show seperate data by PlotATM
+clc;
+close all;
+clear;
 
+plotATM('212mp');
 
-
-% 
-% [R, Rt] = findpeaks(val16000sf);                 % Find R-Waves & Times
-% % EKGf=(fix(val16000sf));
-% % [R, Rt] = findpeaks(EKGf, Fs, 'MinPeakHeight',500);
-% figure(3)                                                           % Plot Filtered EKG
-% plot(x16000s(1:3000),val16000sf(1:3000),'y');
-
-% grid on
-% % display('***This example will write a  Ex1.dat and Ex1.hea file to your current directory!')
-% s=input('Hit "ctrl + c" to quit or "Enter" to continue!');
-% 
-% %Generate 3 different signals and convert them to signed 16 bit in WFDB format
-% clear all;clc;close all
-% N=1024;
-% Fs=48000;
-% tm=[0:1/Fs:(N-1)/Fs]';
-% adu='V/mV/V';
-% info='Example 1';
-% 
-% 
-% %First signal a ramp with 2^16 unique levels and is set to (+-) 2^15 (Volts)
-% %Thus the header file should have one quant step equal to (2^15-(-2^15))/(2^16) V.
-% sig1=double(int16(linspace(-2^15,2^15,N)'));
-% 
-% %Second signal is a sine wave with 2^8 unique levels and set to (+-) 1 (mV)
-% %Thus the header file should one quant step equal a (1--1)/(2^8)  adu step
-% sig2=double(int8(sin(2*pi*tm*1000).*(2^7)))./(2^7);
-% 
-% %Third signal is a random binary signal set to to (+-) 1 (V) with DC (to be discarded)
-% %Thus the header file should have one quant step equal a 1/(2^15) adu step.
-% sig3=(rand(N,1) > 0.97)*2 -1 + 2^16;
-% 
-% %Concatenate all signals and convert to WFDB format with default 16 bits (empty brackets)
-% sig=[sig1 sig2 sig3];
-% mat2wfdb(sig,'Ex1',Fs,[],adu,info)
-% 
-% % %NOTE: If you have WFDB installed you can check the conversion by
-% % %uncomenting and this section and running (notice that all signals are scaled
-% % %to unit amplitude during conversion, with the header files keeping the gain info):
-% 
-% !rdsamp -r Ex1 > foo
-% x=dlmread('foo');
-% subplot(211)
-% plot(sig)
-% subplot(212)
-% plot(x(:,1),x(:,2));hold on;plot(x(:,1),x(:,3),'k');plot(x(:,1),x(:,4),'r')
-
-%%
-Fs=500;
- i=30
-    so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
-    ansy{i} = ans{:};
+hold on;
+plotATM('212me');
+hold on
+    
