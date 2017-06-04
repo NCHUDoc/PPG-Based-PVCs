@@ -127,9 +127,10 @@ hold off
 % plot(x(1:1000), val1(1:1000),'c');
 %% Preprocessing (filtering)
 figure(1)
-range = 750000*4; 
-val16000s = val1(1:range);
-val66000s = val6(1:range);
+range = 6000*125*4; % interpolation (6000seconds(60min)*125(Hz)(samplerate)*4(after interpolation) =30000000)
+startpoint = 3600*125*4; % from 1hr start to 100 minutes(6000seconds) later = 3600seconds(60min)*125(Hz)(samplerate)*4(after interpolation) =  1800000
+val16000s = val1(startpoint:startpoint+range);
+val66000s = val6(startpoint:startpoint+range);
 x16000s = x1(1:range);
 plot(x16000s(1:1000),val16000s(1:1000));
 hold on;
