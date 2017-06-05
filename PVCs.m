@@ -37,10 +37,16 @@ x = (1:size(val, 2)) * interval;
 
 x=x';
 val=val';
+% samples = 100000;
+% plot(x(1+samples:1000+samples), val(1+samples:1000+samples,1));
+% hold on
+% plot(x(1+samples:1000+samples), val(1+samples:1000+samples,6),'r');
 plot(x(1:1000), val(1:1000,1));
 hold on
 plot(x(1:1000), val(1:1000,6),'r');
-
+% plot(x, val(:,1));
+% hold on
+% plot(x, val(:,6),'r');
 for i = 1:length(signal)
     labels{i} = strcat(signal{i}, ' (', units{i}, ')'); 
 end
@@ -59,7 +65,7 @@ Name ='212m';
 infoName = strcat(Name, '.info');
 matName = strcat(Name, '.mat');
 
-
+% samples = 100000;
 load(matName);
 fid = fopen(infoName, 'rt');
 fgetl(fid);
@@ -109,6 +115,9 @@ plot(x(1:range), val(1:range,1));
 hold on
 plot(x(1:range), val(1:range,6),'r');
 hold on
+% 
+% plot(x1(1+(4*samples):4*(range+samples)), val1(1+(4*samples):4*(range+samples)),'cx');
+% plot(x1(1+(4*samples):4*(range+samples)), val6(1+(4*samples):4*(range+samples)),'y+');
 plot(x1(1:4*range), val1(1:4*range),'cx');
 plot(x1(1:4*range), val6(1:4*range),'y+');
 hold on
@@ -128,9 +137,12 @@ hold off
 %% Preprocessing (filtering)
 figure(1)
 range = 6000*125*4; % interpolation (6000seconds(60min)*125(Hz)(samplerate)*4(after interpolation) =30000000)
-startpoint = 3600*125*4; % from 1hr start to 100 minutes(6000seconds) later = 3600seconds(60min)*125(Hz)(samplerate)*4(after interpolation) =  1800000
-val16000s = val1(startpoint:startpoint+range);
-val66000s = val6(startpoint:startpoint+range);
+% startpoint = 3600*125*4; % from 1hr start to 100 minutes(6000seconds) later = 3600seconds(60min)*125(Hz)(samplerate)*4(after interpolation) =  1800000
+% val16000s = val1(startpoint:startpoint+range);
+% val66000s = val6(startpoint:startpoint+range);
+
+val16000s = val1(1:range);
+val66000s = val6(1:range);
 x16000s = x1(1:range);
 plot(x16000s(1:1000),val16000s(1:1000));
 hold on;
@@ -355,3 +367,5 @@ Mso_chan2(vale,Fs)
 [pks,locs]=findpeaks(vale,'MinPeakHeight',0.3);
   plot(vale,'Color','blue'); hold on;
 %   plot(locs,vale(locs),'k^','markerfacecolor',[1 0 0]);
+
+
