@@ -32,7 +32,6 @@ for i = 1:size(val, 1)
     val(i, :) = (val(i, :) - base(i)) / gain(i);
 end
 
-
 x = (1:size(val, 2)) * interval;
 
 x=x';
@@ -368,4 +367,44 @@ Mso_chan2(vale,Fs)
   plot(vale,'Color','blue'); hold on;
 %   plot(locs,vale(locs),'k^','markerfacecolor',[1 0 0]);
 
+%% WFDB tools from MIT - 2017060601
+% https://physionet.org/physiotools/matlab/wfdb-app-matlab/
 
+% rdsamp read signal files of WFDB records
+clc 
+clear
+close all;
+[tm, signal]=rdsamp('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\101',[],1000);
+plot(tm,signal(:,1));
+hold on;
+plot(tm,signal(:,2),'r');
+grid on;
+
+%%
+clc 
+clear
+close all;
+[tm2, signal2]=rdsamp('D:\MIT-BIH\mimicdb\484\48400001',[],75000); % mimicdb maximum database 600 seconds
+% plot(tm2,signal2(:,1));
+% hold on;
+% plot(tm2,signal2(:,7),'r');
+plot(tm2(1:1000),signal2(1:1000,1));
+hold on;
+plot(tm2(1:1000),signal2(1:1000,7),'r');
+%% 
+clc 
+clear
+close all;
+[tm3,signal3,Fs]=rdsamp('D:\MIT-BIH\mimicdb\484\48400001',[1 7],75000);
+% plot(tm2,signal2(:,1));
+% hold on;
+% plot(tm2,signal2(:,7),'r');
+plot(tm3(1:1000),signal3(1:1000,1));
+hold on;
+plot(tm3(1:1000),signal3(1:1000,2),'r');
+%%
+% Take 1-2hr PPG of signal 484, but ignore the 
+clc 
+clear
+close all;
+[tm3,signal3,Fs]=rdsamp('D:\MIT-BIH\mimicdb\484\48400006',[1 7],75000);
