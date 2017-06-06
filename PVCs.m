@@ -403,8 +403,93 @@ plot(tm3(1:1000),signal3(1:1000,1));
 hold on;
 plot(tm3(1:1000),signal3(1:1000,2),'r');
 %%
-% Take 1-2hr PPG of signal 484, but ignore the 
+% Take 1-2hr PPG of signal 484, but ignore the gain value
 clc 
 clear
 close all;
-[tm3,signal3,Fs]=rdsamp('D:\MIT-BIH\mimicdb\484\48400006',[1 7],75000);
+
+[tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',[2 7],75000);
+[tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\484\48400008',[2 7],75000);
+[tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\484\48400009',[2 7],75000);
+[tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\484\48400010',[2 7],75000);
+[tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\484\48400011',[2 7],75000);
+[tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\484\48400012',[2 7],75000);
+[tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\484\48400013',[2 7],75000);
+[tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\484\48400014',[2 7],75000);
+[tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\484\48400015',[2 7],75000);
+[tm1,signal1,Fs]=rdsamp('D:\MIT-BIH\mimicdb\484\48400016',[2 7],75000);
+
+signal7ecg = signal7(:,1);
+signal8ecg = signal8(:,1);
+signal9ecg = signal9(:,1);
+signalaecg = signala(:,1);
+signalbecg = signalb(:,1);
+signalcecg = signalc(:,1);
+signaldecg = signald(:,1);
+signaleecg = signale(:,1);
+signalfecg = signalf(:,1);
+signal1ecg = signal1(:,1);
+
+signalecg484_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
+signalecg484_1to2hr = signalecg484_1to2hr';
+
+signal7ppg = signal7(:,2);
+signal8ppg = signal8(:,2);
+signal9ppg = signal9(:,2);
+signalappg = signala(:,2);
+signalbppg = signalb(:,2);
+signalcppg = signalc(:,2);
+signaldppg = signald(:,2);
+signaleppg = signale(:,2);
+signalfppg = signalf(:,2);
+signal1ppg = signal1(:,2);
+
+signalppg484_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
+signalppg484_1to2hr = signalppg484_1to2hr';
+
+plot(signalecg484_1to2hr(1:1000));
+hold on
+plot(signalppg484_1to2hr(1:1000),'r');
+%% Interpolation
+
+signalecg484_1to2hrI = interp(signalecg484_1to2hr,4);
+signalppg484_1to2hrI = interp(signalppg484_1to2hr,4);
+
+%% Preprocessing (filtering)
+b = fir1(16,[0.00055 0.22223]);
+B= signalecg484_1to2hrI; 
+signalecg484_1to2hrIf = filter(b,1,B);
+B= signalppg484_1to2hrI; 
+signalppg484_1to2hrIf = filter(b,1,B);
+
+%% find beats
+
+% Method 1:
+Fs=500;
+for i=1:30
+    Mso_chan1(signalecg484_1to2hrIf(1+(i-1)*100000:i*100000),Fs) 
+    ansx{i} = ans{:};
+end
+
+for i=1:30
+beat(i) = length(ansx{i})
+end
+sum(beat)
+% 
+% so_chan(val16000sf(1000001:2000000),Fs) 
+% 
+% so_chan(val16000sf(2000001:3000000),Fs) 
+% 
+% Fs=500;
+%  i=30
+%     so_chan(val16000sf(1+(i-1)*100000:i*100000),Fs) 
+%     ansy{i} = ans{:};
+% Method 2:
+
+Mso_chan2(signalecg484_1to2hrIf,Fs) 
+
+ % Method 3: 
+ 
+ [pks,locs]=findpeaks(signalecg484_1to2hrIf,'MinPeakHeight',0.3);
+ 
+fprintf('Find Peaks = %d\n',length(pks));
