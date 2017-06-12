@@ -587,8 +587,153 @@ Mso_chan2(signalecg484_1to2hrIf,Fs)
  [pks,locs]=findpeaks(signalecg484_1to2hrIf,'MinPeakHeight',0.3);
  
 fprintf('Find Peaks = %d\n',length(pks));
+%% Tranfer data for SingGUI use 20160612
+
+clc 
+clear
+close all;
+plotATM('482m')
+close all
+[tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',[2 7],75000);
+[tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\484\48400008',[2 7],75000);
+[tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\484\48400009',[2 7],75000);
+[tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\484\48400010',[2 7],75000);
+[tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\484\48400011',[2 7],75000);
+[tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\484\48400012',[2 7],75000);
+[tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\484\48400013',[2 7],75000);
+[tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\484\48400014',[2 7],75000);
+[tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\484\48400015',[2 7],75000);
+[tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\484\48400016',[2 7],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\039\03900007',[1 3],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\039\03900008',[1 3],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\039\03900009',[1 3],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\039\03900010',[1 3],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\039\03900011',[1 3],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\039\03900012',[1 3],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\039\03900013',[1 3],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\039\03900014',[1 3],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\039\03900015',[1 3],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\039\03900016',[1 3],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\221\22100007',[1 4],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\221\22100008',[1 4],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\221\22100009',[1 4],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\221\22100010',[1 4],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\221\22100011',[1 4],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\221\22100012',[1 4],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\221\22100013',[1 4],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\221\22100014',[1 4],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\221\22100015',[1 4],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\221\22100016',[1 4],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\230\23000007',[1 5],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\230\23000008',[1 5],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\230\23000009',[1 5],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\230\23000010',[1 5],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\230\23000011',[1 5],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\230\23000012',[1 5],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\230\23000013',[1 5],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\230\23000014',[1 5],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\230\23000015',[1 5],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\230\23000016',[1 5],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\253\25300007',[2 6],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\253\25300008',[2 6],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\253\25300009',[2 6],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\253\25300010',[2 6],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\253\25300011',[2 6],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\253\25300012',[2 6],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\253\25300013',[2 6],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\253\25300014',[2 6],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\253\25300015',[2 6],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\253\25300016',[2 6],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\439\43900007',[1 6],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\439\43900008',[1 6],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\439\43900009',[1 6],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\439\43900010',[1 6],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\439\43900011',[1 6],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\439\43900012',[1 6],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\439\43900013',[1 6],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\439\43900014',[1 6],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\439\43900015',[1 6],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\439\43900016',[1 6],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\444\44400007',[1 5],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\444\44400008',[1 5],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\444\44400009',[1 5],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\444\44400010',[1 5],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\444\44400011',[1 5],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\444\44400012',[1 5],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\444\44400013',[1 5],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\444\44400014',[1 5],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\444\44400015',[1 5],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\444\44400016',[1 5],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\449\44900007',[1 5],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\449\44900008',[1 5],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\449\44900009',[1 5],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\449\44900010',[1 5],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\449\44900011',[1 5],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\449\44900012',[1 5],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\449\44900013',[1 5],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\449\44900014',[1 5],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\449\44900015',[1 5],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\449\44900016',[1 5],75000);
+
+% [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\482\48200007',[3 7],75000);
+% [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\482\48200008',[3 7],75000);
+% [tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\482\48200009',[3 7],75000);
+% [tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\482\48200010',[3 7],75000);
+% [tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\482\48200011',[3 7],75000);
+% [tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\482\48200012',[3 7],75000);
+% [tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\482\48200013',[3 7],75000);
+% [tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\482\48200014',[3 7],75000);
+% [tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\482\48200015',[3 7],75000);
+% [tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\482\48200016',[3 7],75000);
+
+signal7ecg = signal7(:,1);
+signal8ecg = signal8(:,1);
+signal9ecg = signal9(:,1);
+signalaecg = signala(:,1);
+signalbecg = signalb(:,1);
+signalcecg = signalc(:,1);
+signaldecg = signald(:,1);
+signaleecg = signale(:,1);
+signalfecg = signalf(:,1);
+signal1ecg = signal1(:,1);
+
+signalecg484_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
+signalecg484_1to2hr = signalecg484_1to2hr';
+
+signal7ppg = signal7(:,2);
+signal8ppg = signal8(:,2);
+signal9ppg = signal9(:,2);
+signalappg = signala(:,2);
+signalbppg = signalb(:,2);
+signalcppg = signalc(:,2);
+signaldppg = signald(:,2);
+signaleppg = signale(:,2);
+signalfppg = signalf(:,2);
+signal1ppg = signal1(:,2);
+
+signalppg484_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
+signalppg484_1to2hr = signalppg484_1to2hr';
+
+plot(signalecg484_1to2hr(1:1000));
+hold on
+plot(signalppg484_1to2hr(1:1000),'r');
+
 %%
 
-% i=22
-% % plot(signalecg484_1to2hrIf(1+(i-1)*100000:i*100000));
-%     Mso_chan1(signalecg484_1to2hrIf(1+21*100000:21*100000),Fs) 
+ecg_1to2hr = [ signal7ecg signal8ecg signal9ecg signalaecg signalbecg signalcecg signaldecg signaleecg signalfecg signal1ecg];
+ppg_1to2hr = [ signal7ppg signal8ppg signal9ppg signalappg signalbppg signalcppg signaldppg signaleppg signalfppg signal1ppg];
+clear signal*
+
+dlmwrite('484ecg.dat', ecg_1to2hr);
+dlmwrite('484ppg.dat', ppg_1to2hr);
+
+save('484ecg.mat', 'ecg_1to2hr');
+save('484ppg.mat', 'ecg_1to2hr');
+
