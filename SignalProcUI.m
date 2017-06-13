@@ -140,7 +140,12 @@ function load_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 [handles.Data.filename, handles.Data.filepath]=uigetfile('*.dat','Please select a data file');
+% add by mingfan 20170614
+if handles.Data.filename == 0
+    return
+else
  handles.Data.signal = load(handles.Data.filename, handles.Data.filepath,'-ascii');
+end
 % [filename filepath]=uigetfile('*.dat');
 % fullpath = [filepath filename];
 % signal = load(fullpath);

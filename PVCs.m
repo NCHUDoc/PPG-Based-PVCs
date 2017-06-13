@@ -56,7 +56,7 @@ grid on;
 %% Interpolation to 500Hz
 % https://www.google.com.tw/url?sa=t&rct=j&q=&esrc=s&source=web&cd=13&ved=0ahUKEwjnkLL_npfUAhVDoZQKHRsmAjcQFgiAATAM&url=https%3A%2F%2Fmirlab.org%2Fjang%2Fbooks%2FmatlabProgramming4guru%2Fslide%2F09-%25E5%2585%25A7%25E6%258F%2592%25E6%25B3%2595.ppt&usg=AFQjCNF1yMD4McCGM7iTxCQuqiNDQAZo5Q
 % http://blog.sina.com.cn/s/blog_4c7482f101009vm2.html
-
+% downsample/resample/decimate/interp/rat
 clc;
 close all;
 clear;
@@ -592,18 +592,18 @@ fprintf('Find Peaks = %d\n',length(pks));
 clc 
 clear
 close all;
-plotATM('482m')
+plotATM('484m')
 close all
-[tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',[2 7],75000);
-[tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\484\48400008',[2 7],75000);
-[tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\484\48400009',[2 7],75000);
-[tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\484\48400010',[2 7],75000);
-[tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\484\48400011',[2 7],75000);
-[tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\484\48400012',[2 7],75000);
-[tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\484\48400013',[2 7],75000);
-[tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\484\48400014',[2 7],75000);
-[tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\484\48400015',[2 7],75000);
-[tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\484\48400016',[2 7],75000);
+[tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',[1 7],75000);
+[tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\484\48400008',[1 7],75000);
+[tm9,signal9]=rdsamp('D:\MIT-BIH\mimicdb\484\48400009',[1 7],75000);
+[tma,signala]=rdsamp('D:\MIT-BIH\mimicdb\484\48400010',[1 7],75000);
+[tmb,signalb]=rdsamp('D:\MIT-BIH\mimicdb\484\48400011',[1 7],75000);
+[tmc,signalc]=rdsamp('D:\MIT-BIH\mimicdb\484\48400012',[1 7],75000);
+[tmd,signald]=rdsamp('D:\MIT-BIH\mimicdb\484\48400013',[1 7],75000);
+[tme,signale]=rdsamp('D:\MIT-BIH\mimicdb\484\48400014',[1 7],75000);
+[tmf,signalf]=rdsamp('D:\MIT-BIH\mimicdb\484\48400015',[1 7],75000);
+[tm1,signal1]=rdsamp('D:\MIT-BIH\mimicdb\484\48400016',[1 7],75000);
 
 % [tm7,signal7]=rdsamp('D:\MIT-BIH\mimicdb\039\03900007',[1 3],75000);
 % [tm8,signal8]=rdsamp('D:\MIT-BIH\mimicdb\039\03900008',[1 3],75000);
