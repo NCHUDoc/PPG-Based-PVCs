@@ -840,5 +840,54 @@ dlmwrite('484ecg.dat', ecg_1to2hr);
 dlmwrite('484ppg.dat', ppg_1to2hr);
 
 save('484ecg.mat', 'ecg_1to2hr');
-save('484ppg.mat', 'ecg_1to2hr');
+save('484ppg.mat', 'ppg_1to2hr');
 
+%% Test PPG peaks - 2017061401
+
+clc
+clear 
+close all
+load ('484ecg.mat')
+% load ('484ppg.mat')
+for i = 1:10
+    ecg{i}(1,:)= ecg_1to2hr(:,i);
+%    ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+plot(ecgtotal(1:3000));
+
+for j=0:74
+    for i=1:length(ecgtotal(1,(1+j*10000):(10000+j*10000)))
+        signalecg=ecgtotal(1,(1+j*10000):(10000+j*10000));
+    end
+    signalecg = signalecg';
+    
+    indx=find(signalecg>0.2);
+    
+    diffindx = indx(2:end) - indx(1:end -1);
+    indgap=find(diffindx>1);
+    
+    indmax=[]; % the location of index with maximal value in each cycle
+    for k=1:length(indgap)+1
+        if k==1
+            period=indx(1:indgap(1));
+        elseif k==length(indgap)+1
+            period=indx(indgap(k-1)+1:end);
+        else
+            period=indx(indgap(k-1)+1:indgap(k));
+        end
+        [value,ind]=max(signalecg(period));
+        indmax(k)=period(ind(1));
+    end
+    peaks(j+1)=length(indmax);
+end
+figure,
+plot(signalecg);hold on;grid on
+plot(indmax,signalecg(indmax), 'ro') 
+title('MIT-BIH(Arrhythmia Database) 100.dat')
+xlabel('Time(Seconds)');
+ylabel('Amplitute');
+legend('ECG','Peaks');
+peakstotal=sum(peaks)
