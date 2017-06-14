@@ -379,8 +379,113 @@ plot(tm,signal(:,1));
 hold on;
 plot(tm,signal(:,2),'r');
 grid on;
+%% -- 20170614 PM 1:42 --  Read data from MIT-BIH test%%
+clc;
+clear all;
+%------ SPECIFY DATA -------%%%%%%  SPECIFY DATA的所有變數可視情況作調整-----
+PATH= 'D:\MIT-BIH\MIT-BIH(Arrhythmia Database)';   % path, where data are saved
+HEADERFILE= '101.hea';      % header-file in text format
+ATRFILE= '101.atr';         % attributes-file in binary format
+DATAFILE= '101.dat';        % data-file
+% SAMPLES2READ=650000;        % number of samples to be read
+% SAMPLES2READ=324000;
+SAMPLES2READ=108000;
+channel=1;                  % LeadII一般在1，Record114在2，Record102＆104僅有V5＆V2無LeadII。
+% in case of more than one signal:
+% 2*SAMPLES2READ samples are read
+sample_rate=360;
+%------ LOAD HEADER DATA --------------------------------------------------
+fprintf(1,'WORKING ON %s ...\n', HEADERFILE);
+signalh= fullfile(PATH, HEADERFILE);
+fid1=fopen(signalh,'r');
+z= fgetl(fid1);
+A= sscanf(z, '%*s %d %d %d',[1,3]);
+nosig= A(1);                % number of signals
+sfreq= A(2);                % sample rate of data
+clear A;
+for kk=1:nosig
+z= fgetl(fid1);
+A= sscanf(z, '%*s %d %d %d %d %d',[1,5]);
+dformat(kk)= A(1);           % format; here only 212 is allowed
+gain(kk)= A(2);              % number of integers per mV
+bitres(kk)= A(3);            % bitresolution
+zerovalue(kk)= A(4);         % integer value of ECG zero point
+firstvalue(kk)= A(5);        % first integer value of signal (to test for errors)
+end;
+fclose(fid1);
+clear A;
+%------ LOAD BINARY DATA --------------------------------------------------
+if dformat~= [212,212], error('this script does not apply binary formats different to 212.'); end;
+signald= fullfile(PATH, DATAFILE);            % data in format 212
+fid2=fopen(signald,'r');
+A= fread(fid2, [3, SAMPLES2READ], 'uint8')';  % matrix with 3 rows, each 8 bits long, = 2*12bit
+fclose(fid2);
+M2H= bitshift(A(:,2), -4);            % 字元向右移四位，即取字元的高四位
+M1H= bitand(A(:,2), 15);              % 取字元的低四位
+PRL=bitshift(bitand(A(:,2),8),9);     % sign-bit  取出字元低四位中最高位，向左移九位
+PRR=bitshift(bitand(A(:,2),128),5);   % sign-bit  取出字元高四位中最高位，向左移五位
+M( : , 1)= bitshift(M1H,8)+ A(:,1)-PRL;
+M( : , 2)= bitshift(M2H,8)+ A(:,3)-PRR;
+if M(1,:) ~= firstvalue, error('inconsistency in the first bit values'); end;
+clear A M1H M2H PRR PRL;
+fprintf(1,'LOADING DATA FINISHED \n');
 
-%%
+ecgdata=M(:,channel);
+ecg_data=ecgdata;
+
+%% 
+cmap = {'b', 'r','c','y','g'};
+for channel = 1: 2
+    plot(M(:,channel),cmap{channel}); hold on
+end
+%% Read atr
+[tm, signal]=rdsamp('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\107',[],650000);
+[ann]=rdann('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\107', 'atr', [],[],[],'V');
+figure(1)
+plot(tm,signal(:,1));hold on;grid on
+plot(tm(ann(:,1)),signal(ann(:,1),1),'ro','MarkerSize',8);
+title('MIT-BIH(Arrhythmia Database) 107.dat')
+xlabel('Samples');
+ylabel('Amplitute');
+legend('ECG','PVCs');
+%% Count peak
+clear
+close all
+clc
+[tm, signal]=rdsamp('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100',[],5000);
+plot(tm,signal(:,1));grid on
+
+for i=1:length(signal(:,1))
+    signalecg=signal(:,1);
+end
+
+indx=find(signalecg>0);
+
+diffindx = indx(2:end) - indx(1:end -1); 
+indgap=find(diffindx>1);
+
+indmax=[]; % the location of index with maximal value in each cycle
+for k=1:length(indgap)+1
+    if k==1
+        period=indx(1:indgap(1));
+    elseif k==length(indgap)+1
+        period=indx(indgap(k-1)+1:end);
+    else
+        period=indx(indgap(k-1)+1:indgap(k));
+    end
+    [value,ind]=max(signalecg(period));
+    indmax(k)=period(ind(1));
+end
+figure,
+plot(tm,signalecg);hold on;grid on
+plot(indmax/360,signalecg(indmax), 'ro') 
+title('MIT-BIH(Arrhythmia Database) 100.dat')
+xlabel('Time(Seconds)');
+ylabel('Amplitute');
+legend('ECG','Peaks');
+
+
+%% Read data from mimicdb
 clc 
 clear
 close all;
