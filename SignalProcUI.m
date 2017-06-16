@@ -66,6 +66,8 @@ handles.line_signal=line('parent',handles.axes_sig,...
 
 set(handles.slider_sig,'value',1);
 set(handles.pop_filter,'value',3);
+set(handles.checkbox_onset,'enable','off');
+
 handles.File={}; 
 % Update handles structure
 guidata(hObject, handles);
@@ -145,6 +147,7 @@ if handles.Data.filename == 0
     return
 else
  handles.Data.signal = load(handles.Data.filename, handles.Data.filepath,'-ascii');
+ set(handles.checkbox_onset,'enable','on');
 end
 % [filename filepath]=uigetfile('*.dat');
 % fullpath = [filepath filename];
