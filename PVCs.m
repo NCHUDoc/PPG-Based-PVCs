@@ -869,8 +869,10 @@ ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{1
 testtotal = ecgtotal';
  plot(testtotal,'c');
 plot(ecgtotal(1:3000));
-
+%%
+ecgtotal=signalecg484_1to2hr';
 for j=0:74
+% for j=9:18
     for i=1:length(ecgtotal(1,(1+j*10000):(10000+j*10000)))
         signalecg=ecgtotal(1,(1+j*10000):(10000+j*10000));
     end
