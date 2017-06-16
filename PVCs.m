@@ -833,7 +833,13 @@ signalppg484_1to2hr = signalppg484_1to2hr';
 plot(signalecg484_1to2hr(1:1000));
 hold on
 plot(signalppg484_1to2hr(1:1000),'r');
+%%
+close all
+plot(signalecg484_1to2hr); grid on ; hold on
 
+signalppg484_1to2hr(1:length(signalppg484_1to2hr)) = signalppg484_1to2hr(1:length(signalppg484_1to2hr)) -0.8;
+
+plot(signalppg484_1to2hr,'r');
 %%
 
 ecg_1to2hr = [ signal7ecg signal8ecg signal9ecg signalaecg signalbecg signalcecg signaldecg signaleecg signalfecg signal1ecg];
@@ -860,6 +866,8 @@ end
 
 % ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
 ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+testtotal = ecgtotal';
+ plot(testtotal,'c');
 plot(ecgtotal(1:3000));
 
 for j=0:74
@@ -962,4 +970,27 @@ title('MIMIC database 484.qrs')
 xlabel('Number of QRS (peaks)')
 ylabel('QRS width (ms)')
 legend('Annatation QRSw(ms)')
+
+%% Get QRSw annotation from 1hour to 2hour 40 mins and analysis
+% HR_bph = 4997
+
+QRSw_1hr2hr40=QRSw(4997:(4997*2));
+QRSw_avg=mean(QRSw_1hr2hr40)
+abnormal =0;
+abnormal2 =0;
+j=1;k=1;
+for i=1: length(QRSw_1hr2hr40)
+    if (QRSw_1hr2hr40(i) - QRSw_avg)>5
+        abnormal = abnormal +1;
+        indx(j) = i;
+        j=j+1;
+    elseif(QRSw_1hr2hr40(i) - QRSw_avg)<=-6
+        abnormal2 = abnormal2 +1;
+        indx2(k) = i;
+        k=k+1;
+    end
+
+end
+%%
+
 
