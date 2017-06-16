@@ -217,7 +217,8 @@ Mso_chan2(val16000sf,Fs)
  [pks,locs]=findpeaks(val16000sf,'MinPeakHeight',0.3);
  
 fprintf('Find Peaks = %d\n',length(pks));
- %%  20170603 - show seperate data by PlotATM
+
+ %%  20170603 - test show seperate data by PlotATM 
 clc;
 close all;
 clear;
@@ -366,11 +367,13 @@ Mso_chan2(vale,Fs)
 [pks,locs]=findpeaks(vale,'MinPeakHeight',0.3);
   plot(vale,'Color','blue'); hold on;
 %   plot(locs,vale(locs),'k^','markerfacecolor',[1 0 0]);
-
-%% WFDB tools from MIT - 2017060601
+% ======================================================================================
+%% WFDB tools from MIT - 2017060601  
 % https://physionet.org/physiotools/matlab/wfdb-app-matlab/
-
+%
 % rdsamp read signal files of WFDB records
+% ======================================================================================
+
 clc 
 clear
 close all;
@@ -434,9 +437,10 @@ ecgdata=M(:,channel);
 ecg_data=ecgdata;
 
 %% 
-cmap = {'b', 'r','c','y','g'};
+cmap = {'b', 'g','c','y','g'};
 for channel = 1: 2
-    plot(M(:,channel),cmap{channel}); hold on
+%     plot(M(:,channel),cmap{channel}); hold on
+    plot(M(1:1000,channel),cmap{channel}); hold on
 end
 %% Read atr
 [tm, signal]=rdsamp('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\107',[],650000);
@@ -448,7 +452,7 @@ title('MIT-BIH(Arrhythmia Database) 107.dat')
 xlabel('Samples');
 ylabel('Amplitute');
 legend('ECG','PVCs');
-%% Count peak
+%% Count peak with MIT-BIH Arrhythmia DB signal 100 (5000 samples)
 clear
 close all
 clc
@@ -500,7 +504,7 @@ plot(tm2(1:1000),signal2(1:1000,7),'r');
 clc 
 clear
 close all;
-[tm3,signal3,Fs]=rdsamp('D:\MIT-BIH\mimicdb\482\48200003',[3 7],75000);
+[tm3,signal3]=rdsamp('D:\MIT-BIH\mimicdb\482\48200003',[3 7],75000);
 % plot(tm2,signal2(:,1));
 % hold on;
 % plot(tm2,signal2(:,7),'r');
@@ -510,7 +514,7 @@ close all;
 plot(tm3(4001:5000),signal3(4001:5000,1));
 hold on;
 plot(tm3(4001:5000),signal3(4001:5000,2),'r');
-%%
+%% Test Table from reference paper for 9 signals with 1 to 2hr40min ECG and PPG datas
 plotATM('482m');
 %%
 % Take 1-2hr PPG of signal 484, but ignore the gain value
@@ -840,5 +844,122 @@ dlmwrite('484ecg.dat', ecg_1to2hr);
 dlmwrite('484ppg.dat', ppg_1to2hr);
 
 save('484ecg.mat', 'ecg_1to2hr');
-save('484ppg.mat', 'ecg_1to2hr');
+save('484ppg.mat', 'ppg_1to2hr');
+
+%% Test PPG peaks - 2017061401
+
+clc
+clear 
+close all
+% load ('484ecg.mat')
+load ('484ppg.mat')
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+plot(ecgtotal(1:3000));
+
+for j=0:74
+    for i=1:length(ecgtotal(1,(1+j*10000):(10000+j*10000)))
+        signalecg=ecgtotal(1,(1+j*10000):(10000+j*10000));
+    end
+    signalecg = signalecg';
+    
+    indx=find(signalecg>0.2);
+    
+    diffindx = indx(2:end) - indx(1:end -1);
+    indgap=find(diffindx>1);
+    
+    indmax=[]; % the location of index with maximal value in each cycle
+    for k=1:length(indgap)+1
+        if k==1
+            period=indx(1:indgap(1));
+        elseif k==length(indgap)+1
+            period=indx(indgap(k-1)+1:end);
+        else
+            period=indx(indgap(k-1)+1:indgap(k));
+        end
+        [value,ind]=max(signalecg(period));
+        indmax(k)=period(ind(1));
+    end
+    peaks(j+1)=length(indmax);
+end
+figure,
+plot(signalecg);hold on;grid on
+plot(indmax,signalecg(indmax), 'ro') 
+% title('MIT-BIH(Arrhythmia Database) 100.dat')
+title('MIMIC DB Record 484')
+xlabel('Time(Seconds)');
+ylabel('Amplitute');
+% legend('ECG','Peaks');
+legend('PPG','Peaks');
+peakstotal=sum(peaks)
+
+%% Read MIMIC database annotation - 2017061601
+clc
+clear
+close all
+channel =1;
+PATH = 'D:\MIT-BIH\mimicdb\484\';
+DATAFILE = '484.qrs';
+%------ LOAD BINARY DATA --------------------------------------------------
+signald= fullfile(PATH, DATAFILE);            % data in format 212
+fid2=fopen(signald,'r');
+A= fread(fid2, 'uint8')';  % matrix with 3 rows, each 8 bits long, = 2*12bit
+fclose(fid2);
+
+fprintf(1,'LOADING DATA FINISHED \n');
+
+char(A(5:16))
+
+char(A(21:32))
+
+% for i = 1:length(A)-15
+%     QRS{i}=char(A(i*16-11:i*16))
+% end
+j=1;
+for i = 1:length(A)-12
+    if strcmp('Q',char(A(i)))
+        if strcmp('R',char(A(i+1)))
+            QRS{j}=char(A(i:i+12));
+             j=j+1;
+        end
+     end
+end
+%%
+% Subject 484 (m, 60) 
+% Clinical class: 
+% Record 484 Duration 44.9 hours 
+% Signals: II I ABP PAP CVP LAP PLETH CO2 
+% Measurements: ABP AWRR C.O. CVP ETCO2 HR IMCO2 LAP PAP SpO2 TBLOOD 
+% HR_bpm = 88.303637713437270 average
+time_hour=44.9;
+time_min=44.9*60;
+time_sec=44.9*60*60;
+peaks=length(QRS);
+HR_sec=peaks/time_sec;
+HR_bpm=HR_sec*60 
+HR_bph=HR_bpm*60 
+
+
+
+%%
+clear Str
+for i=1:length(QRS)
+    Str(i,1:3)=QRS{i}(1,6:8);
+end
+for i=1:length(Str)
+    QRSw(i)=str2num(Str(i,1:3));
+end
+%%
+
+bar(QRSw)
+grid on
+title('MIMIC database 484.qrs')
+xlabel('Number of QRS (peaks)')
+ylabel('QRS width (ms)')
+legend('Annatation QRSw(ms)')
 
