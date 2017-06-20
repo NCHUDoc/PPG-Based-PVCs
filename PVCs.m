@@ -939,6 +939,20 @@ for i = 1:length(A)-12
         end
      end
 end
+
+j=1;
+for i = 1:length(A)
+    if strcmp('Q',char(A(i)))
+        if strcmp('R',char(A(i+1)))
+            others(j)={A(i-4:i-1)};
+             j=j+1;
+        end
+     end
+end
+
+for i=1:length(others)
+    other(i) = others{i}(1,4);
+end
 %%
 % Subject 484 (m, 60) 
 % Clinical class: 
@@ -976,10 +990,11 @@ legend('Annatation QRSw(ms)')
 %% Get QRSw annotation from 1hour to 2hour 40 mins and analysis
 % HR_bph = 4997
 
-QRSw_1hr2hr40=QRSw(4997:(4997*2));
-QRSw_avg=mean(QRSw_1hr2hr40)
+QRSw_1hr2hr40=QRSw; %(4997:(4997*2));
+QRSw_avg=mean(QRSw_1hr2hr40);
 abnormal =0;
 abnormal2 =0;
+normal=0;
 j=1;k=1;
 for i=1: length(QRSw_1hr2hr40)
     if (QRSw_1hr2hr40(i) - QRSw_avg)>5
@@ -990,9 +1005,87 @@ for i=1: length(QRSw_1hr2hr40)
         abnormal2 = abnormal2 +1;
         indx2(k) = i;
         k=k+1;
+    else
+        normal = normal +1;
+        indx3(k) = i;
+        k=k+1;
     end
 
 end
+
+% abnormal(5195) + abnormal2(621) + normal(218554) = length(QRSw_1hr2hr40)
+
+
+%% Wavelet Test 20170618
+
+t=0:0.01:100;
+y=sin(t);
+plot(t,y,'rx');hold on ;grid on; 
+xlabel('Number of DT(sampling time)')
+ylabel('Wavelet Result')
+legend('Original Signal(sin(t))')
+z=wavelet(y,100);
+plot(t,z)
+
 %%
 
+clc
+clear
+close all
+channel =1;
+PATH = 'D:\MIT-BIH\mimicdb\484\';
+DATAFILE = '484.ple';
+%------ LOAD BINARY DATA --------------------------------------------------
+signald= fullfile(PATH, DATAFILE);            % data in format 212
+fid2=fopen(signald,'r');
+A= fread(fid2, 'uint8')';  % matrix with 3 rows, each 8 bits long, = 2*12bit
+fclose(fid2);
+
+fprintf(1,'LOADING DATA FINISHED \n');
+
+char(A(5:16))
+
+char(A(21:32))
+
+j=1;
+% for i = 2:100
+for i = 2:length(A)-1
+    if strcmp('/',char(A(i)))
+        Plethy{j}=char(A(i-1:i+1));
+        j=j+1;
+    end
+end
+
+%%
+normalbeat = 0;
+abnormalbeat=0;
+abnormalbeattypeII =0;
+abnormalbeattypeIII=0;
+abnormalbeattypeIV=0;
+abnormalbeattypeV=0;
+
+for k = 1:length(Plethy)
+    switch Plethy{k}
+        case '0/0'
+            normalbeat=normalbeat+1;
+        case '1/0'
+            abnormalbeat=abnormalbeat+1;
+        case '0/1'
+            abnormalbeattypeII=abnormalbeattypeII+1;
+        case '0/-1'
+            abnormalbeattypeIII=abnormalbeattypeIII+1;
+        case '-1/0'
+            abnormalbeattypeIV=abnormalbeattypeIV+1;
+        otherwise '-1/-1';
+            abnormalbeattypeV=abnormalbeattypeV+1;
+    end
+end
+
+% normalbeat = 212734 ,abnormalbeattypeV = 2512 , abnormalbeat = 6816
+% length(Plethy) = normalbeat+abnormalbeattypeV+abnormalbeat = 222062
+% switch case OK
+
+%%
+testwin =ecgtotal(1:500)'
+Mso_chan2(testwin,125);
 
