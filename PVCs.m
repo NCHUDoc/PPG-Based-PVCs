@@ -1063,6 +1063,7 @@ abnormalbeattypeII =0;
 abnormalbeattypeIII=0;
 abnormalbeattypeIV=0;
 abnormalbeattypeV=0;
+abnormalbeattypeVI=0;
 
 for k = 1:length(Plethy)
     switch Plethy{k}
@@ -1072,16 +1073,18 @@ for k = 1:length(Plethy)
             abnormalbeat=abnormalbeat+1;
         case '0/1'
             abnormalbeattypeII=abnormalbeattypeII+1;
-        case '0/-1'
+        case '0/-'
             abnormalbeattypeIII=abnormalbeattypeIII+1;
-        case '-1/0'
+        case '1/-'
             abnormalbeattypeIV=abnormalbeattypeIV+1;
-        otherwise '-1/-1';
+        case '1/1'
             abnormalbeattypeV=abnormalbeattypeV+1;
+        otherwise
+            abnormalbeattypeVI=abnormalbeattypeVI+1;
     end
 end
 
-% normalbeat = 212734 ,abnormalbeattypeV = 2512 , abnormalbeat = 6816
+% normalbeat = 212734 ,abnormalbeattypeVI = 2512 , abnormalbeat = 6816
 % length(Plethy) = normalbeat+abnormalbeattypeV+abnormalbeat = 222062
 % switch case OK
 
