@@ -870,7 +870,8 @@ testtotal = ecgtotal';
  plot(testtotal,'c');
 plot(ecgtotal(1:3000));
 %%
-ecgtotal=signalecg484_1to2hr';
+% ecgtotal=signalecg484_1to2hr';
+ ecgtotal=testtotal';
 for j=0:74
 % for j=9:18
     for i=1:length(ecgtotal(1,(1+j*10000):(10000+j*10000)))
@@ -1089,6 +1090,255 @@ end
 % switch case OK
 
 %%
-testwin =ecgtotal(1:500)'
-Mso_chan2(testwin,125);
+% testwin =ecgtotal(1:500)'
+% Mso_chan2(testwin,125);
 
+%% Test PPG peaks - 2017062301
+% Wavelet test
+clc
+clear 
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE)
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+testtotal = ecgtotal';
+%  plot(testtotal,'c');
+plot(1:1:3000,ecgtotal(1:3000), '-mo','MarkerEdgeColor','r',...
+    'MarkerFaceColor',[.49 1 .63],...
+    'MarkerSize',3); grid on
+fprintf('data format %d %f %7.4f %3.4f %g %x\n',ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1));
+testwavelet =ecgtotal(1:10000)';
+testsonchan =ecgtotal(1:10000)';
+points=length(testwavelet);
+level = 3;
+freqs = 125;
+PVC=0; 
+PVCv2 =0; 
+min_ecgdata=0;
+swa=zeros(4,points);
+swd=zeros(4,points);
+signal=testwavelet(1:points);
+
+%算小波系數和尺度系數
+for i=1:points-3
+  swa(1,i+3)=1/4*signal(i+3-2^0*0)+3/4*signal(i+3-2^0*1)+3/4*signal(i+3-2^0*2)+1/4*signal(i+3-2^0*3);
+   swd(1,i+3)=-1/4*signal(i+3-2^0*0)-3/4*signal(i+3-2^0*1)+3/4*signal(i+3-2^0*2)+1/4*signal(i+3-2^0*3);
+end
+j=2;
+while j<=level
+   for i=1:points-24
+     swa(j,i+24)=1/4*swa(j-1,i+24-2^(j-1)*0)+3/4*swa(j-1,i+24-2^(j-1)*1)+3/4*swa(j-1,i+24-2^(j-1)*2)+1/4*swa(j-1,i+24-2^(j-1)*3);
+     swd(j,i+24)=-1/4*swa(j-1,i+24-2^(j-1)*0)-3/4*swa(j-1,i+24-2^(j-1)*1)+3/4*swa(j-1,i+24-2^(j-1)*2)+1/4*swa(j-1,i+24-2^(j-1)*3);
+   end
+   j=j+1;
+end
+
+%%
+%**************************************求正負極大值對*****************************************%
+ddw=zeros(size(swd));
+pddw=ddw;
+nddw=ddw;
+%小波系數的大於0的點
+posw=swd.*(swd>0);
+%斜率大於0
+pdw=((posw(:,1:points-1)-posw(:,2:points))<0);
+%正極大值點
+pddw(:,2:points-1)=((pdw(:,1:points-2)-pdw(:,2:points-1))>0);
+%小波系數小於0的點
+negw=swd.*(swd<0);
+ndw=((negw(:,1:points-1)-negw(:,2:points))>0);
+%負極大值點
+nddw(:,2:points-1)=((ndw(:,1:points-2)-ndw(:,2:points-1))>0);
+%或運算
+ddw=pddw|nddw;
+ddw(:,1)=1;
+ddw(:,points)=1;
+%求出極值點的值,其他點置0
+wpeak=ddw.*swd;
+wpeak(:,1)=wpeak(:,1)+1e-10;
+wpeak(:,points)=wpeak(:,points)+1e-10;
+
+
+interva2=zeros(1,points);
+intervaqs=zeros(1,points);
+Mj1=wpeak(1,:);
+Mj4=wpeak(3,:);
+
+posi=Mj4.*(Mj4>0);
+%求正極大值的平均
+thposi=(max(posi(1:round(points/4)))+max(posi(round(points/4):2*round(points/4)))+max(posi(2*round(points/4):3*round(points/4)))+max(posi(3*round(points/4):4*round(points/4))))/4;
+posi=(posi>thposi/3);
+nega=Mj4.*(Mj4<0);
+%求負極大值的平均
+thnega=(min(nega(1:round(points/4)))+min(nega(round(points/4):2*round(points/4)))+min(nega(2*round(points/4):3*round(points/4)))+min(nega(3*round(points/4):4*round(points/4))))/4;
+nega=-1*(nega<thnega/4);
+%找出非0點
+interva=posi+nega;
+loca=find(interva);
+for i=1:length(loca)-1
+    if abs(loca(i)-loca(i+1))<80
+       diff(i)=interva(loca(i))-interva(loca(i+1));
+    else
+       diff(i)=0;
+    end
+end
+%找出極值對
+loca2=find(diff==-2);
+%負極大值點
+interva2(loca(loca2(1:length(loca2))))=interva(loca(loca2(1:length(loca2))));
+%正極大值點
+interva2(loca(loca2(1:length(loca2))+1))=interva(loca(loca2(1:length(loca2))+1));
+intervaqs(1:points-10)=interva2(11:points);
+count=zeros(1,1);
+count2=zeros(1,1);
+count3=zeros(1,1);
+mark1=0;
+mark2=0;
+mark3=0;
+i=1;
+j=1;
+Rnum=0;
+%*************************求正負極值對過零點，即R波峰值，並標出QRS波起點及終點*******************%
+while i<points
+    if interva2(i)==-1
+       mark1=i;
+       i=i+1;
+       while(i<points&interva2(i)==0)
+          i=i+1;
+       end
+       mark2=i;
+%求極大值對的過零點
+       mark3= round((abs(Mj4(mark2))*mark1+mark2*abs(Mj4(mark1)))/(abs(Mj4(mark2))+abs(Mj4(mark1))));
+%R波極大值點
+       R_result(j)=mark3-10;
+       count(mark3-10)=1;
+
+
+        i=i+60;
+        j=j+1;
+        Rnum=Rnum+1;
+    end
+i=i+1;
+end
+%************************刪除多檢點，補償漏檢點**************************%
+num2=1;
+while(num2~=0)
+   num2=0;
+%j=3,過零點
+   R=find(count);
+   R_point=signal(R);
+   mean_R_point=mean(R_point);
+%過零點間隔
+   R_R=R(2:length(R))-R(1:length(R)-1);
+   RRmean=mean(R_R);
+%當兩R波間隔小于0.4RRmean時,去掉值小的R波
+
+end
+
+
+%plot result
+figure;
+%plot(ecgdata(1:points)),grid on,axis tight,axis([0,65000,-3,5]);
+%plot(ecgdata(1:points)),grid on,axis tight,axis([650000-1.6*65000,650000-1.5*65000,-3,5]); %100.dat
+plot(testwavelet(1:points)),grid on,axis tight %,axis([0,6500,-3,5]);
+string2=['PPG signal (',DATAFILE,') Peak & PVC detection'];
+title(string2);
+
+
+hold on
+
+% for i=3:Rnum
+for i=1:Rnum-1
+    if R_result(i)==0;
+        return
+    end
+    % set break point here to see process
+    plot(R_result(i),testwavelet(R_result(i)),'bo','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor',[.49 1 .63]);
+    
+    
+    %         if (( R_result(i) - R_result(i-1) ) > RRmean );% & (( R_result(i-1) - R_result(i-2) ) < RRmean ) ;
+    if (( R_result(i+1) - R_result(i) ) > RRmean ) ;
+        %                 baseline=mean(abs((signal(R_result(i-1)-20)+signal(R_result(i-1)+20))/2));
+        baseline=mean(abs((signal(R_result(i)-20)+signal(R_result(i)+20))/2));
+        
+        %                 baseline_signal=testwavelet(R_result(i-1)+35:R_result(i-1)+85)+baseline;
+        baseline_signal=testwavelet(R_result(i)+35:R_result(i)+85)+baseline;
+        mean_baseline_signal=mean(baseline_signal);
+        sum_baseline_signal=sum(baseline_signal);
+        
+        %                 baseline_signal_2=testwavelet(R_result(i-1):R_result(i));
+        baseline_signal_2=testwavelet(R_result(i):R_result(i+1));
+        min_baseline_signal_2=min(baseline_signal_2)+baseline;
+        %                 Rpoint=testwavelet(R_result(i-1));
+        Rpoint=testwavelet(R_result(i));
+        
+        %                 min_ecgdata=min(testwavelet(R_result(i-1):R_result(i)));
+        min_ecgdata=min(testwavelet(R_result(i):R_result(i+1)));
+        square_baseline_signal=(baseline_signal-0.7).*(baseline_signal-0.7);
+        max_square=max(square_baseline_signal);
+        
+        %                 RRR=R_result(i-1);
+        RRR=R_result(i);
+        %                     for i=R_result(i-1) : R_result(i)
+        for i=R_result(i) : R_result(i+1)
+            if(testwavelet(i)==min_ecgdata);
+                
+                number=i;
+                QRS_w=i-RRR;
+                
+            end
+        end
+        
+        
+        
+        if   abs(min_baseline_signal_2) > (Rpoint)  | (abs(sum_baseline_signal)>abs(5*3) & QRS_w > 1/8*RRmean)   ;
+            
+            
+            
+            plot(number,testwavelet(number),'diamond','MarkerSize',15,'MarkerEdgeColor','m');
+            
+            PVC=PVC+1;
+            count_time( 1,rem (PVC,6) + 6 ) = i ;
+            
+            
+            
+            
+            
+            for i=0:PVC
+                time(PVC)=number/freqs-0.2;
+            end
+            
+            %====================sending warning=================
+            
+            %if(PVC>5)
+            %if(  time(PVC) - time(PVC-5)   <  60   & PVC > 5   )
+            % warning_number=warning_number+1;
+            % fprintf(1,'warning time = %d \n',number/360-0.2 );
+            % fprintf(1,'warning_number = %d \n',warning_number );
+            
+            % end
+            % end
+            
+            
+            
+        end
+        
+        
+        
+    end
+    
+end
+
+hold off
+fprintf(1,'Rrsult : \nPVCnumber= %d \n',PVC);
+fprintf(1,'Rrsult : \nPeak-number= %d \n',length(R_result));
+%%
+
+Mso_chan2(testsonchan,125);
