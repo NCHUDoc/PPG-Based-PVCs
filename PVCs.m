@@ -1260,8 +1260,8 @@ for i=1:Rnum-1
         return
     end
     % set break point here to see process
-    plot(R_result(i),testwavelet(R_result(i)),'bo','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor',[.49 1 .63]);
-    
+     plot(R_result(i)-2,testwavelet(R_result(i)-2),'bo','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor',[.49 1 .63]);
+        
     
     %         if (( R_result(i) - R_result(i-1) ) > RRmean );% & (( R_result(i-1) - R_result(i-2) ) < RRmean ) ;
     if (( R_result(i+1) - R_result(i) ) > RRmean ) ;
@@ -1339,6 +1339,143 @@ end
 hold off
 fprintf(1,'Rrsult : \nPVCnumber= %d \n',PVC);
 fprintf(1,'Rrsult : \nPeak-number= %d \n',length(R_result));
-%%
+%% So and Chan 2017.06.26
 
-Mso_chan2(testsonchan,125);
+
+THRESHOLD_PARAM = 8;
+FILTER_PARAMETER = 16;
+SAMPLE_RATE = 125;
+
+j=1;
+first_satisfy=0;
+second_satisfy=0;
+Rget=0;
+counter = 0;
+R_negative=0;
+Max=0;
+postive=0;
+det = 0;
+% range = 50;
+% cal_time=60;
+
+%讀檔
+
+fprintf('Read data!\n');
+A=testsonchan;
+datanumber= length(testsonchan);
+
+slope_initial_maxi=-2*A(1)-A(2)+A(4)+2*A(5);
+fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+
+%算出前125筆資料的slope_initial_maxi
+for i=1:SAMPLE_RATE
+    fprintf('data %d =%g\n',i,A(i));
+    if i>=3
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        K(i)=slope;
+        fprintf('slope = %g\n',slope);
+        if slope > slope_initial_maxi
+            slope_initial_maxi = slope;
+            fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+        end
+    end
+end
+fprintf('The slope_initial_maxi = %g\n',slope_initial_maxi);
+slope_maxi=slope_initial_maxi;
+fprintf('slope_maxi = %g\n',slope_maxi);
+
+% Original So and Chan
+
+%    k1=0;
+
+for i=3:datanumber-5
+    if(det<2)     
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        if(slope>0)
+            det=det+1;
+        else det=0;
+        end
+    else
+        if(A(i)>A(i+1))
+            if(i<=range)
+                maxi=max(A(1:i+range));
+            elseif(i+range>=datanumber-5)
+                maxi=max(A(i-range:datanumber-5));
+            else
+                maxi=max(A(i-range:i+range));
+            end
+            
+            if (A(i)==maxi)
+                R_peak(j)=i;
+                j=j+1;
+            end
+            det=0;
+        end
+    end
+end
+
+%     if (k1>120)
+%     {
+%         k1=120;  // 4 secs * 30 frames = 120
+%     }
+% 
+%     memset(RRI, 0, 150*sizeof(double));
+%     sum_RRI=0;
+
+%     for(i=0;i<k1-1;i++)
+%     {
+%         RRI_t=(R_peak[i+1]-R_peak[i])*0.0039;
+%         RRI[i]=RRI_t;
+%         sum_RRI=sum_RRI+RRI_t;
+%         //printf("%d %4f  \n",i,RRI[i]);
+%     }
+
+
+
+
+
+fprintf('Total R-Peak number=%d\n',j-1);
+
+
+
+
+
+% %計算RRI
+% for j=2:j-1
+% RRI(j-1,1)=[R_found(j,1)-R_found(j-1,1)]/SAMPLE_RATE;
+% end
+
+%%%%%%%%%%%%%%%%%%%% 以下為作圖%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% for m=1:datanumber
+%    X(m,1) = -200; 
+% end
+% 
+% % for m=1:datanumber
+% %    X(m,1) = 0; 
+% % end
+% 
+% for k=1:j
+%     a=R_found(k,1);
+%     X(a,1) = A(a,1);
+% end
+% 
+for n=1:datanumber
+    x(n,1) = n;
+end
+figure,
+plot(x,A)
+hold on
+% plot(x,A,x,X,'ro');
+plot(R_peak,A(R_peak),'ro');
+xlabel('Time');
+ylabel('Voltage');
+title('PPG Waveform ');
+ylim([min(A)*1.1 max(A)*1.1])
+
+legend('PPG waveform','R-peak');
+grid on;
+
+
+
+% Mso_chan2(testsonchan,125);
