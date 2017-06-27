@@ -1340,8 +1340,22 @@ hold off
 fprintf(1,'Rrsult : \nPVCnumber= %d \n',PVC);
 fprintf(1,'Rrsult : \nPeak-number= %d \n',length(R_result));
 %% So and Chan 2017.06.26
+clc
+clear 
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE)
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
 
-
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+% testtotal = ecgtotal';
+testsonchan = ecgtotal';
+% testsonchan =ecgtotal(1:10000)';
 THRESHOLD_PARAM = 8;
 FILTER_PARAMETER = 16;
 SAMPLE_RATE = 125;
@@ -1355,6 +1369,7 @@ R_negative=0;
 Max=0;
 postive=0;
 det = 0;
+range = SAMPLE_RATE/4;  % modify range from 50 to 30, all 10000 samples can be detected.
 % range = 50;
 % cal_time=60;
 
@@ -1430,14 +1445,7 @@ end
 %         //printf("%d %4f  \n",i,RRI[i]);
 %     }
 
-
-
-
-
 fprintf('Total R-Peak number=%d\n',j-1);
-
-
-
 
 
 % %≠p∫‚RRI
@@ -1476,6 +1484,7 @@ ylim([min(A)*1.1 max(A)*1.1])
 legend('PPG waveform','R-peak');
 grid on;
 
+%%
 
 
 % Mso_chan2(testsonchan,125);
