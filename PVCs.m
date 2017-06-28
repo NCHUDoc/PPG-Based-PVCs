@@ -1640,24 +1640,6 @@ fprintf('Total R-Peak number by Librow =%d\n',length(R_peak));
 Original_sig = testsonchan;
 Fs = 125;
 count = 0;
-% function [qrs_amp, qrs_ind] = so_chan(X, Fs)  % SO_CHAN Performs the So-Chan QRS detection algorithm.
-%   [QRS_AMP, QRS_IND] = SO_CHAN(X, FS) performs the So-Chan detection algorithm [1] that detects QRS occurrences and
-%   outputs their amplitude and index (QRS_AMP and QRS_IND respectively). The function takes an input signal X sampled 
-%   at FS. The algorithm used here is derived from the  FD52 variant.
-%   [1] H. H. So and K. L. Chan, "Development of QRS detection method for real-time ambulatory cardiac monitor,"
-%   Proc. 19th Annu. Int. Conf. IEEE Eng. Med. Biol. Soc. Magnificent Milestones Emerg. Oppor. Med. Eng. (Cat. No.97CH36136), vol. 1, no. C, pp. 0, 1997.
-%   Last revision in 24/01/2017.
-%   V1.0: Performs the So-Chan algorithm, the FD52 variant.  Multiple detections are handled using an ignore
-%          period, which corresponds to the physiological minimum of RR interval. Testing with mitdb/100
-%          gave 2274 detected R, with few misses due to abnormally low amplitude.
-%   V1.1: Corrected the derivative filter coefficients, which were inverted. Also added plots to help users understand the outputs better.
-%
-%   See also: PAN_TOMPKINS.
-
-% Written by:
-%   Muhammad Haziq Bin Kamarul Azman
-%   Universiti Kuala Lumpur
-%   mhaziq@unikl.edu.my
 
 qrs_amp = {};
 qrs_ind = {};
@@ -1675,13 +1657,6 @@ ecg_len = size(Original_sig, 1);
 
 Ts = (0:ecg_len-1)/Fs;
 
-figure(100);
-
-ax1 = subplot(4,1,1);
-plot( Ts, Original_sig );
-title('Original signal');
-xlabel('Time [s]');
-
 %   Remove nan data
 for data = 1:1:length(Original_sig);
     if isnan(Original_sig(data));
@@ -1692,11 +1667,6 @@ end
 % Lowpass filter (4th-order Butterworth, Fc = 100 Hz)
 [b, a] = butter(4, 50/(Fs/2));
 Filtered_sig = filtfilt(b, a, Original_sig);
-
-ax2 = subplot(4,1,2);
-plot( Ts, Filtered_sig );
-title('Lowpass-filtered signal (4th-order Butterworth, Fc = 100 Hz)');
-xlabel('Time [s]');
 
 % Bandpass filter (50 Hz band reject)
 % Inspired by http://dsp.stackexchange.com/a/1090
@@ -1713,11 +1683,6 @@ a = poly(notchPoles);
 
 Filtered_sig = filtfilt(b, a, Filtered_sig);
 
-ax3 = subplot(4,1,3);
-plot( Ts, Filtered_sig );
-title('Notch-filtered signal (Fc = 50 Hz)');
-xlabel('Time [s]');
-
 % Derivative H(z) = (1/8)*(-2z^-2 - z^-11 + z^1 + 2z^2)
 h = [2 1 0 -1 -2]';
 Slope = [];
@@ -1725,13 +1690,6 @@ for kk=1:ecg_dim,
     Slope = [Slope conv(Filtered_sig(:, kk), h)];
 end
 Slope = Slope(3:end-2, :);
-
-ax4 = subplot(4,1,4);
-plot( Ts, Slope );
-title('Derivative filter output');
-xlabel('Time [s]');
-
-linkaxes([ax1, ax2, ax3, ax4], 'xy');
 
 % Maximum slope calculation (FD5x)
 % Initialization
@@ -1877,25 +1835,12 @@ qrs_ind{kk} = r_ind';
 % Plot 
 figure(101);
 
-ax11 = subplot(2,1,1);
-hold on;
-plot( Ts, Original_sig(:,1), 'LineWidth', 1.5 );
+% plot( Ts, Original_sig(:,1), 'LineWidth', 1.5 );hold on;
+plot(Original_sig(:,1), 'LineWidth', 1.5 );hold on;
 title('Algorithm output');
 xlabel('Time [s]');
-
-% plot(onset_ind_buf/Fs, onset_buf, 'bx', 'LineWidth', 2);
-plot(r_ind_buf/Fs, r_amp_buf, 'ro', 'LineWidth', 2);
-% legend('Signal', 'Estimated onset', 'Estimated R peak', 'Location', 'best');
+% plot(r_ind_buf/Fs, r_amp_buf, 'ro', 'LineWidth', 2);
+ plot(r_ind_buf, r_amp_buf, 'ro', 'LineWidth', 2); grid on;
 legend('Signal','Estimated R peak', 'Location', 'best');
-ax22 = subplot(2,1,2);
-hold on;
-plot( Ts, Slope(:,1), 'LineWidth', 1.5);
-title('Derivator output');
-xlabel('Time [s]');
 
-plot(r_ind_buf/Fs, slope_thresh_buf, 'ko--', 'LineWidth', 1.2);
-plot(r_ind_buf/Fs, maxi_buf, 'ro--', 'LineWidth', 1.2);
-legend('Derivator output', 'Slope threshold', 'Slope maximum', 'Location', 'best');
-
-linkaxes([ax11, ax22], 'x');
 fprintf('Total R-Peak number by Librow =%d\n',length(r_amp_buf));
