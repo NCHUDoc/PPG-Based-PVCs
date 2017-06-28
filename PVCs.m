@@ -1369,7 +1369,7 @@ R_negative=0;
 Max=0;
 postive=0;
 det = 0;
-range = SAMPLE_RATE/4;  % modify range from 50 to 30, all 10000 samples can be detected.
+range = round(SAMPLE_RATE/4);  % modify range from 50 to 30, all 10000 samples can be detected.
 % range = 50;
 % cal_time=60;
 
@@ -1445,7 +1445,7 @@ end
 %         //printf("%d %4f  \n",i,RRI[i]);
 %     }
 
-fprintf('Total R-Peak number=%d\n',j-1);
+fprintf('Total R-Peak number by So and Chan =%d\n',j-1);
 
 
 % %­pºâRRI
@@ -1484,7 +1484,155 @@ ylim([min(A)*1.1 max(A)*1.1])
 legend('PPG waveform','R-peak');
 grid on;
 
+%% Librow http://www.librow.com/cases/case-2 2017062801
+clear ecg samplingrate corrected filtered1 peaks1 filtered2 peaks2 fresult
+samplingrate = 125;
+ecg = testsonchan';
+count =0;
+% ecg = ecg*1000; %amp
+ecg=ecg(1:750000);
+%   Remove nan data
+for data = 1:1:length(ecg);
+    if isnan(ecg(data));
+        ecg(data) = ecg(data-1);
+        count = count +1
+    end
+end
+%   Remove lower frequencies
+fresult=fft(ecg);
+fresult(1 : round(length(fresult)*1/samplingrate))=0;
+fresult(end - round(length(fresult)*1/samplingrate) : end)=0;
+corrected=real(ifft(fresult));
+figure,
+plot(ecg,'r'); hold on ;grid on
+plot(corrected,'c-');
+%   Filter - first pass
+WinSize = floor(samplingrate * 500 / 1000);
+if rem(WinSize,2)==0
+    WinSize = WinSize+1;
+end
+% //////ecgdemowinmax.m////////
+% filtered1=ecgdemowinmax(corrected, WinSize);
+  Original= corrected;
+  WinHalfSize = floor(WinSize/2);
+    WinHalfSizePlus = WinHalfSize+1;
+    WinSizeSpec = WinSize-1;
+    FrontIterator = 1;
+    WinPos = WinHalfSize;
+    WinMaxPos = WinHalfSize;
+    WinMax = Original(1);
+    OutputIterator = 0;
+    for LengthCounter = 0:1:WinHalfSize-1
+        if Original(FrontIterator+1) > WinMax
+            WinMax = Original(FrontIterator+1);
+            WinMaxPos = WinHalfSizePlus + LengthCounter;
+        end
+        FrontIterator=FrontIterator+1;
+    end
+    if WinMaxPos == WinHalfSize
+        Filtered(OutputIterator+1)=WinMax;
+    else
+        Filtered(OutputIterator+1)=0;
+    end
+    OutputIterator = OutputIterator+1;
+    for LengthCounter = 0:1:WinHalfSize-1
+        if Original(FrontIterator+1)>WinMax
+            WinMax=Original(FrontIterator+1);
+            WinMaxPos=WinSizeSpec;
+        else
+            WinMaxPos=WinMaxPos-1;
+        end
+        if WinMaxPos == WinHalfSize
+            Filtered(OutputIterator+1)=WinMax;
+        else
+            Filtered(OutputIterator+1)=0;
+        end
+        FrontIterator = FrontIterator+1;
+        OutputIterator = OutputIterator+1;
+    end
+    for FrontIterator=FrontIterator:1:length(Original)-1
+        if Original(FrontIterator+1)>WinMax
+            WinMax=Original(FrontIterator+1);
+            WinMaxPos=WinSizeSpec;
+        else
+            WinMaxPos=WinMaxPos-1;
+            if WinMaxPos < 0
+                WinIterator = FrontIterator-WinSizeSpec;
+                WinMax = Original(WinIterator+1);
+                WinMaxPos = 0;
+                WinPos=0;
+                for WinIterator = WinIterator:1:FrontIterator
+                    if Original(WinIterator+1)>WinMax
+                        WinMax = Original(WinIterator+1);
+                        WinMaxPos = WinPos;
+                    end
+                    WinPos=WinPos+1;
+                end
+            end
+        end
+        if WinMaxPos==WinHalfSize
+            Filtered(OutputIterator+1)=WinMax;
+        else
+            Filtered(OutputIterator+1)=0;
+        end
+        OutputIterator=OutputIterator+1;
+    end
+    WinIterator = WinIterator-1;
+    WinMaxPos = WinMaxPos-1;
+    for LengthCounter=1:1:WinHalfSizePlus-1
+        if WinMaxPos<0
+            WinIterator=length(Original)-WinSize+LengthCounter;
+            WinMax=Original(WinIterator+1);
+            WinMaxPos=0;
+            WinPos=1;
+            for WinIterator=WinIterator+1:1:length(Original)-1
+                if Original(WinIterator+1)>WinMax
+                    WinMax=Original(WinIterator+1);
+                    WinMaxPos=WinPos;
+                end
+                WinPos=WinPos+1;
+            end
+        end
+        if WinMaxPos==WinHalfSize
+            Filtered(OutputIterator+1)=WinMax;
+        else
+            Filtered(OutputIterator+1)=0;
+        end
+        FrontIterator=FrontIterator-1;
+        WinMaxPos=WinMaxPos-1;
+        OutputIterator=OutputIterator+1;
+    end
+filtered1 = Filtered;
+% //////////////////////////////
+%   Scale ecg
+peaks1=filtered1/(max(filtered1)/7);
+%   Filter by threshold filter
+for data = 1:1:length(peaks1)
+    if peaks1(data) < 1
+        peaks1(data) = 0;
+    else
+        peaks1(data)=1;
+    end
+end
+positions=find(peaks1);
+for data=1:1:length(positions)-1
+    x=positions(data+1)-positions(data);
+    RRI(1,data) = x;
+end
+
+for data=1:1:length(peaks1)
+    if peaks1(data) == 0;
+        peaks1(data) = nan;
+    end
+end
+figure,
+%   Plotting ECG in green
+%   Show peaks in the same picture
+plot(ecg, '-g'); title('\bf Comparative PPG R-Peak Detection Plot');
+hold on; grid on
+stem(peaks1.*ecg, ':k');
+%   Hold off the figure
+hold off
+fprintf('Total R-Peak number by Librow =%d\n',length(R_peak));
 %%
-
-
 % Mso_chan2(testsonchan,125);
