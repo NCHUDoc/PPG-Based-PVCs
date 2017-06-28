@@ -1634,5 +1634,268 @@ stem(peaks1.*ecg, ':k');
 %   Hold off the figure
 hold off
 fprintf('Total R-Peak number by Librow =%d\n',length(R_peak));
-%%
-% Mso_chan2(testsonchan,125);
+%% So and Chan - II 2017062901
+% initial
+% Original_sig = testsonchan(1:10000);
+Original_sig = testsonchan;
+Fs = 125;
+count = 0;
+% function [qrs_amp, qrs_ind] = so_chan(X, Fs)  % SO_CHAN Performs the So-Chan QRS detection algorithm.
+%   [QRS_AMP, QRS_IND] = SO_CHAN(X, FS) performs the So-Chan detection algorithm [1] that detects QRS occurrences and
+%   outputs their amplitude and index (QRS_AMP and QRS_IND respectively). The function takes an input signal X sampled 
+%   at FS. The algorithm used here is derived from the  FD52 variant.
+%   [1] H. H. So and K. L. Chan, "Development of QRS detection method for real-time ambulatory cardiac monitor,"
+%   Proc. 19th Annu. Int. Conf. IEEE Eng. Med. Biol. Soc. Magnificent Milestones Emerg. Oppor. Med. Eng. (Cat. No.97CH36136), vol. 1, no. C, pp. 0, 1997.
+%   Last revision in 24/01/2017.
+%   V1.0: Performs the So-Chan algorithm, the FD52 variant.  Multiple detections are handled using an ignore
+%          period, which corresponds to the physiological minimum of RR interval. Testing with mitdb/100
+%          gave 2274 detected R, with few misses due to abnormally low amplitude.
+%   V1.1: Corrected the derivative filter coefficients, which were inverted. Also added plots to help users understand the outputs better.
+%
+%   See also: PAN_TOMPKINS.
+
+% Written by:
+%   Muhammad Haziq Bin Kamarul Azman
+%   Universiti Kuala Lumpur
+%   mhaziq@unikl.edu.my
+
+qrs_amp = {};
+qrs_ind = {};
+
+% first_period = round(1.0*Fs);                % 1 s period for initializing
+first_period = round(1.0*Fs); 
+filter_parameter = 16;                        % As per FD52
+parameter = 8;                                 % As per FD52
+successive_value_count = fix(0.01*Fs);          % FD5x specifies a successive count of 2 samples at 200 Hz
+                                                % This means the slope needs to be above the threshold for 10 ms 
+ignore_count = fix(0.2*Fs);                      % Detection ignore period (200 ms or physiological constraint)
+
+ecg_dim = size(Original_sig, 2);
+ecg_len = size(Original_sig, 1);
+
+Ts = (0:ecg_len-1)/Fs;
+
+figure(100);
+
+ax1 = subplot(4,1,1);
+plot( Ts, Original_sig );
+title('Original signal');
+xlabel('Time [s]');
+
+%   Remove nan data
+for data = 1:1:length(Original_sig);
+    if isnan(Original_sig(data));
+        Original_sig(data) = Original_sig(data-1);
+        count = count +1
+    end
+end
+% Lowpass filter (4th-order Butterworth, Fc = 100 Hz)
+[b, a] = butter(4, 50/(Fs/2));
+Filtered_sig = filtfilt(b, a, Original_sig);
+
+ax2 = subplot(4,1,2);
+plot( Ts, Filtered_sig );
+title('Lowpass-filtered signal (4th-order Butterworth, Fc = 100 Hz)');
+xlabel('Time [s]');
+
+% Bandpass filter (50 Hz band reject)
+% Inspired by http://dsp.stackexchange.com/a/1090
+freqRatio = 50/(Fs/2);
+
+notchWidth = 0.1;
+
+notchZeros = [exp( 1j*pi*freqRatio ), exp( -1j*pi*freqRatio )];
+
+notchPoles = (1-notchWidth) * notchZeros;
+
+b = poly(notchZeros);
+a = poly(notchPoles);
+
+Filtered_sig = filtfilt(b, a, Filtered_sig);
+
+ax3 = subplot(4,1,3);
+plot( Ts, Filtered_sig );
+title('Notch-filtered signal (Fc = 50 Hz)');
+xlabel('Time [s]');
+
+% Derivative H(z) = (1/8)*(-2z^-2 - z^-11 + z^1 + 2z^2)
+h = [2 1 0 -1 -2]';
+Slope = [];
+for kk=1:ecg_dim,
+    Slope = [Slope conv(Filtered_sig(:, kk), h)];
+end
+Slope = Slope(3:end-2, :);
+
+ax4 = subplot(4,1,4);
+plot( Ts, Slope );
+title('Derivative filter output');
+xlabel('Time [s]');
+
+linkaxes([ax1, ax2, ax3, ax4], 'xy');
+
+% Maximum slope calculation (FD5x)
+% Initialization
+% Iterate on all leads
+% for kk=1:ecg_dim,
+kk =1; % only 1 lead
+
+% Initial run
+if kk==1,         % Reset plot buffers on 1st lead only
+    onset_ind_buf = [];
+    onset_buf = [];
+    slope_thresh_buf = [];
+    maxi_buf = [];
+    r_amp_buf = [];
+    r_ind_buf = [];
+end
+    
+r_amp = [];
+r_ind = [];
+    
+successive_count = 0;
+
+slope = Slope(:, kk);                   % Slope of signal
+signalpf = Filtered_sig(:, kk);         % Original signal, post-filtered
+signal = Original_sig(:, kk);           % Original signal
+
+% Initial maximum slope
+[~, II_pos] = max(slope(1:first_period));    % First maxi is the maximum earliest slope value
+[~, II_neg] = min(slope(1:first_period));
+
+II = min(II_pos, II_neg);
+
+% First onset
+height_at_onset = signalpf(II);         % Take signal value at II
+
+% First peak
+peak = 0;
+I = II;
+
+while ~peak,                         % Find peak by checking diff
+    peak = (signalpf(I+1) - signalpf(I)) < 0;
+    I = I+1;
+end
+
+I = I-1;
+height_of_R_point = signalpf(I);      % Take signal value at I
+
+% Initial maxi
+maxi = abs(slope(II));                % Initialize maxi
+
+% Initial threshold
+slope_threshold = (parameter/16)*maxi;
+
+% Store data in buffer
+if kk==1,
+    onset_ind_buf = [onset_ind_buf II];
+    onset_buf = [onset_buf height_at_onset];
+    slope_thresh_buf = [slope_thresh_buf slope_threshold];
+    maxi_buf = [maxi_buf maxi];
+    r_amp_buf = [r_amp_buf signal(I)];
+    r_ind_buf = [r_ind_buf I];
+end
+
+r_amp = [r_amp signal(I)];
+r_ind = [r_ind I];
+
+% Iteration (Calculation)
+
+ll = first_period+1;
+ignore = 0;
+j=1;
+for ll= first_period+1:size(slope,1),
+    % Evaluate condition for slope
+%     larger_than_slope_threshold = (abs(slope(ll)) > slope_threshold); 
+larger_than_slope_threshold = ((slope(ll)) > slope_threshold); 
+    % Ignore any detection within the count range
+    if ignore,
+        ignore = rem(ignore+1, ignore_count);                               
+    end
+    % If condition is true
+    if larger_than_slope_threshold,                                         
+        if ~ignore,  % If not ignoring detection  
+            % Consider candidate, and start count                      
+            successive_count = successive_count + 1;  
+        end
+    else
+        successive_count = 0;
+    end
+     % If candidate fulfills count value
+    if successive_count == successive_value_count,                         
+        % Update onset height
+        height_at_onset = signalpf(ll);                                    
+        
+        peak = 0;
+        l = ll;
+        
+        % Detect R peak
+        while ~peak,                                                       
+            peak = (signalpf(l+1) - signalpf(l)) < 0;
+            l = l+1;
+            if l==size(slope,1),
+                l = l+1;
+                peak = 1;
+            end
+        end
+        
+        % Update R peak
+        l = l-1;
+        height_of_R_point = signalpf(l);                                   
+        
+        l_bufx(j) = l;
+        R_bufx(j) = height_of_R_point;
+        j=j+1;
+        
+        first_max = abs(height_of_R_point - height_at_onset);
+        % Update maxi
+        maxi = ( (first_max - maxi)/filter_parameter ) + maxi;             
+        % Update threshold
+        slope_threshold = (parameter/16)*maxi;                             
+        
+        successive_count = 0;
+        ignore = 1;
+        
+        if kk==1,
+            onset_ind_buf = [onset_ind_buf ll];
+            onset_buf = [onset_buf height_at_onset];
+            slope_thresh_buf = [slope_thresh_buf slope_threshold];
+            maxi_buf = [maxi_buf maxi];
+            r_amp_buf = [r_amp_buf signal(l)];
+            r_ind_buf = [r_ind_buf l];
+        end
+        
+        r_amp = [r_amp signal(l)];
+        r_ind = [r_ind l];
+        
+    end
+%   ll = ll+1;
+end
+ 
+qrs_amp{kk} = r_amp';
+qrs_ind{kk} = r_ind';
+
+% Plot 
+figure(101);
+
+ax11 = subplot(2,1,1);
+hold on;
+plot( Ts, Original_sig(:,1), 'LineWidth', 1.5 );
+title('Algorithm output');
+xlabel('Time [s]');
+
+% plot(onset_ind_buf/Fs, onset_buf, 'bx', 'LineWidth', 2);
+plot(r_ind_buf/Fs, r_amp_buf, 'ro', 'LineWidth', 2);
+% legend('Signal', 'Estimated onset', 'Estimated R peak', 'Location', 'best');
+legend('Signal','Estimated R peak', 'Location', 'best');
+ax22 = subplot(2,1,2);
+hold on;
+plot( Ts, Slope(:,1), 'LineWidth', 1.5);
+title('Derivator output');
+xlabel('Time [s]');
+
+plot(r_ind_buf/Fs, slope_thresh_buf, 'ko--', 'LineWidth', 1.2);
+plot(r_ind_buf/Fs, maxi_buf, 'ro--', 'LineWidth', 1.2);
+legend('Derivator output', 'Slope threshold', 'Slope maximum', 'Location', 'best');
+
+linkaxes([ax11, ax22], 'x');
+fprintf('Total R-Peak number by Librow =%d\n',length(r_amp_buf));
