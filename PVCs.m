@@ -1093,7 +1093,7 @@ end
 % testwin =ecgtotal(1:500)'
 % Mso_chan2(testwin,125);
 
-%% Test PPG peaks - 2017062301
+%% Test PPG peaks Wavelet - 2017062301
 % Wavelet test
 clc
 clear 
@@ -1101,6 +1101,7 @@ close all
 % load ('484ecg.mat')
 DATAFILE = '484ppg.mat';
 load (DATAFILE)
+count =0;
 for i = 1:10
 %     ecg{i}(1,:)= ecg_1to2hr(:,i);
    ecg{i}(1,:)= ppg_1to2hr(:,i);
@@ -1110,12 +1111,20 @@ end
 ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
 testtotal = ecgtotal';
 %  plot(testtotal,'c');
-plot(1:1:3000,ecgtotal(1:3000), '-mo','MarkerEdgeColor','r',...
-    'MarkerFaceColor',[.49 1 .63],...
-    'MarkerSize',3); grid on
+% plot(1:1:3000,ecgtotal(1:3000), '-mo','MarkerEdgeColor','r',...
+%     'MarkerFaceColor',[.49 1 .63],...
+%     'MarkerSize',3); grid on
 fprintf('data format %d %f %7.4f %3.4f %g %x\n',ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1));
-testwavelet =ecgtotal(1:10000)';
-testsonchan =ecgtotal(1:10000)';
+% testwavelet =ecgtotal(1:10000)';
+testwavelet =ecgtotal';
+% testsonchan =ecgtotal(1:10000)';
+%   Remove nan data
+for data = 1:1:length(testwavelet);
+    if isnan(testwavelet(data));
+        testwavelet(data) = testwavelet(data-1);
+        count = count +1
+    end
+end
 points=length(testwavelet);
 level = 3;
 freqs = 125;
@@ -1140,7 +1149,6 @@ while j<=level
    j=j+1;
 end
 
-%%
 %**************************************求正負極大值對*****************************************%
 ddw=zeros(size(swd));
 pddw=ddw;
@@ -1339,155 +1347,23 @@ end
 hold off
 fprintf(1,'Rrsult : \nPVCnumber= %d \n',PVC);
 fprintf(1,'Rrsult : \nPeak-number= %d \n',length(R_result));
-%% So and Chan 2017.06.26
+%% Librow http://www.librow.com/cases/case-2 2017062801
 clc
 clear 
 close all
 % load ('484ecg.mat')
 DATAFILE = '484ppg.mat';
-load (DATAFILE)
+load (DATAFILE);
 for i = 1:10
 %     ecg{i}(1,:)= ecg_1to2hr(:,i);
    ecg{i}(1,:)= ppg_1to2hr(:,i);
 end
-
 % ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
 ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
-% testtotal = ecgtotal';
-testsonchan = ecgtotal';
-% testsonchan =ecgtotal(1:10000)';
-THRESHOLD_PARAM = 8;
-FILTER_PARAMETER = 16;
-SAMPLE_RATE = 125;
-
-j=1;
-first_satisfy=0;
-second_satisfy=0;
-Rget=0;
-counter = 0;
-R_negative=0;
-Max=0;
-postive=0;
-det = 0;
-range = round(SAMPLE_RATE/4);  % modify range from 50 to 30, all 10000 samples can be detected.
-% range = 50;
-% cal_time=60;
-
-%讀檔
-
-fprintf('Read data!\n');
-A=testsonchan;
-datanumber= length(testsonchan);
-
-slope_initial_maxi=-2*A(1)-A(2)+A(4)+2*A(5);
-fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
-
-%算出前125筆資料的slope_initial_maxi
-for i=1:SAMPLE_RATE
-    fprintf('data %d =%g\n',i,A(i));
-    if i>=3
-        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
-        K(i)=slope;
-        fprintf('slope = %g\n',slope);
-        if slope > slope_initial_maxi
-            slope_initial_maxi = slope;
-            fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
-        end
-    end
-end
-fprintf('The slope_initial_maxi = %g\n',slope_initial_maxi);
-slope_maxi=slope_initial_maxi;
-fprintf('slope_maxi = %g\n',slope_maxi);
-
-% Original So and Chan
-
-%    k1=0;
-
-for i=3:datanumber-5
-    if(det<2)     
-        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
-        if(slope>0)
-            det=det+1;
-        else det=0;
-        end
-    else
-        if(A(i)>A(i+1))
-            if(i<=range)
-                maxi=max(A(1:i+range));
-            elseif(i+range>=datanumber-5)
-                maxi=max(A(i-range:datanumber-5));
-            else
-                maxi=max(A(i-range:i+range));
-            end
-            
-            if (A(i)==maxi)
-                R_peak(j)=i;
-                j=j+1;
-            end
-            det=0;
-        end
-    end
-end
-
-%     if (k1>120)
-%     {
-%         k1=120;  // 4 secs * 30 frames = 120
-%     }
-% 
-%     memset(RRI, 0, 150*sizeof(double));
-%     sum_RRI=0;
-
-%     for(i=0;i<k1-1;i++)
-%     {
-%         RRI_t=(R_peak[i+1]-R_peak[i])*0.0039;
-%         RRI[i]=RRI_t;
-%         sum_RRI=sum_RRI+RRI_t;
-%         //printf("%d %4f  \n",i,RRI[i]);
-%     }
-
-fprintf('Total R-Peak number by So and Chan =%d\n',j-1);
-
-
-% %計算RRI
-% for j=2:j-1
-% RRI(j-1,1)=[R_found(j,1)-R_found(j-1,1)]/SAMPLE_RATE;
-% end
-
-%%%%%%%%%%%%%%%%%%%% 以下為作圖%%%%%%%%%%%%%%%%%%%%%%%%
-% 
-% for m=1:datanumber
-%    X(m,1) = -200; 
-% end
-% 
-% % for m=1:datanumber
-% %    X(m,1) = 0; 
-% % end
-% 
-% for k=1:j
-%     a=R_found(k,1);
-%     X(a,1) = A(a,1);
-% end
-% 
-for n=1:datanumber
-    x(n,1) = n;
-end
-figure,
-plot(x,A)
-hold on
-% plot(x,A,x,X,'ro');
-plot(R_peak,A(R_peak),'ro');
-xlabel('Time');
-ylabel('Voltage');
-title('PPG Waveform ');
-ylim([min(A)*1.1 max(A)*1.1])
-
-legend('PPG waveform','R-peak');
-grid on;
-
-%% Librow http://www.librow.com/cases/case-2 2017062801
+testlibrow = ecgtotal';
 clear ecg samplingrate corrected filtered1 peaks1 filtered2 peaks2 fresult
 samplingrate = 125;
-ecg = testsonchan';
+ecg = testlibrow';
 count =0;
 % ecg = ecg*1000; %amp
 ecg=ecg(1:750000);
@@ -1633,8 +1509,22 @@ hold on; grid on
 stem(peaks1.*ecg, ':k');
 %   Hold off the figure
 hold off
-fprintf('Total R-Peak number by Librow =%d\n',length(R_peak));
+fprintf('Total R-Peak number by Librow =%d\n',length(RRI));
 %% So and Chan - II 2017062901
+clc
+clear 
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE);
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+% testtotal = ecgtotal';
+testsonchan = ecgtotal';
 % initial
 % Original_sig = testsonchan(1:10000);
 Original_sig = testsonchan;
@@ -1843,4 +1733,170 @@ xlabel('Time [s]');
  plot(r_ind_buf, r_amp_buf, 'ro', 'LineWidth', 2); grid on;
 legend('Signal','Estimated R peak', 'Location', 'best');
 
-fprintf('Total R-Peak number by Librow =%d\n',length(r_amp_buf));
+fprintf('Total R-Peak number by So-n-Chan II =%d\n',length(r_amp_buf));
+
+%%
+clc
+clear 
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE)
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+% testtotal = ecgtotal';
+testpan = ecgtotal';
+
+pan_tompkin(testpan,125);
+
+
+
+%% So and Chan 2017.07.02
+clc
+clear 
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE)
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+% testtotal = ecgtotal';
+testsonchan = ecgtotal';
+% testsonchan =ecgtotal(1:10000)';
+THRESHOLD_PARAM = 8;
+FILTER_PARAMETER = 16;
+SAMPLE_RATE = 125;
+
+j=1;
+first_satisfy=0;
+second_satisfy=0;
+Rget=0;
+counter = 0;
+R_negative=0;
+Max=0;
+postive=0;
+det = 0;
+range = round(SAMPLE_RATE/4);  % modify range from 50 to 30, all 10000 samples can be detected.
+% range = 50;
+% cal_time=60;
+
+%讀檔
+
+fprintf('Read data!\n');
+A=testsonchan;
+datanumber= length(testsonchan);
+
+slope_initial_maxi=-2*A(1)-A(2)+A(4)+2*A(5);
+fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+
+%算出前125筆資料的slope_initial_maxi
+for i=1:SAMPLE_RATE
+    fprintf('data %d =%g\n',i,A(i));
+    if i>=3
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        K(i)=slope;
+        fprintf('slope = %g\n',slope);
+        if slope > slope_initial_maxi
+            slope_initial_maxi = slope;
+            fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+        end
+    end
+end
+fprintf('The slope_initial_maxi = %g\n',slope_initial_maxi);
+slope_maxi=slope_initial_maxi;
+fprintf('slope_maxi = %g\n',slope_maxi);
+
+% Original So and Chan
+
+%    k1=0;
+
+for i=3:datanumber-5
+    if(det<2)     
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        if(slope>0)
+            det=det+1;
+        else det=0;
+        end
+    else
+        if(A(i)>A(i+1))
+            if(i<=range)
+                maxi=max(A(1:i+range));
+            elseif(i+range>=datanumber-5)
+                maxi=max(A(i-range:datanumber-5));
+            else
+                maxi=max(A(i-range:i+range));
+            end
+            
+            if (A(i)==maxi)
+                R_peak(j)=i;
+                j=j+1;
+            end
+            det=0;
+        end
+    end
+end
+
+%     if (k1>120)
+%     {
+%         k1=120;  // 4 secs * 30 frames = 120
+%     }
+% 
+%     memset(RRI, 0, 150*sizeof(double));
+%     sum_RRI=0;
+
+%     for(i=0;i<k1-1;i++)
+%     {
+%         RRI_t=(R_peak[i+1]-R_peak[i])*0.0039;
+%         RRI[i]=RRI_t;
+%         sum_RRI=sum_RRI+RRI_t;
+%         //printf("%d %4f  \n",i,RRI[i]);
+%     }
+
+fprintf('Total R-Peak number by So and Chan =%d\n',j-1);
+
+
+% %計算RRI
+% for j=2:j-1
+% RRI(j-1,1)=[R_found(j,1)-R_found(j-1,1)]/SAMPLE_RATE;
+% end
+
+%%%%%%%%%%%%%%%%%%%% 以下為作圖%%%%%%%%%%%%%%%%%%%%%%%%
+% 
+% for m=1:datanumber
+%    X(m,1) = -200; 
+% end
+% 
+% % for m=1:datanumber
+% %    X(m,1) = 0; 
+% % end
+% 
+% for k=1:j
+%     a=R_found(k,1);
+%     X(a,1) = A(a,1);
+% end
+% 
+for n=1:datanumber
+    x(n,1) = n;
+end
+figure,
+plot(x,A)
+hold on
+% plot(x,A,x,X,'ro');
+plot(R_peak,A(R_peak),'ro');
+xlabel('Time');
+ylabel('Voltage');
+title('PPG Waveform ');
+ylim([min(A)*1.1 max(A)*1.1])
+
+legend('PPG waveform','R-peak');
+grid on;
