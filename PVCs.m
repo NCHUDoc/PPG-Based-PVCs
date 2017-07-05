@@ -1026,6 +1026,7 @@ xlabel('Number of DT(sampling time)')
 ylabel('Wavelet Result')
 legend('Original Signal(sin(t))')
 z=wavelet(y,100);
+% z = cwt(y,1:48,'db4');
 plot(t,z)
 
 %%
@@ -2007,7 +2008,7 @@ zoom on;
 % hold on,plot(locs,THRS_buf,'LineWidth',2,'Linestyle','-.','color','g');
 % legend('Filtered Signal','Peaks','Noise Level','Signal Level','Threshold Level')
 % zoom on;
-% fprintf('Total R-Peak number by Pan Tompkins =%d\n',length(pks));
+fprintf('Total R-Peak number by Pan Tompkins =%d\n',length(pks));
 
 
 
@@ -2155,3 +2156,125 @@ ylim([min(A)*1.1 max(A)*1.1])
 
 legend('PPG waveform','R-peak');
 grid on;
+
+%% 20170705 Add Hilbert Transform
+
+clear all;
+clc;
+close all
+% load ('484ecg.mat')
+DATAFILE = '484ppg.mat';
+load (DATAFILE);
+for i = 1:10
+%     ecg{i}(1,:)= ecg_1to2hr(:,i);
+   ecg{i}(1,:)= ppg_1to2hr(:,i);
+end
+% ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
+ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
+% testtotal = ecgtotal';
+testht = ecgtotal';
+clear ecg samplingrate corrected filtered1 peaks1 filtered2 peaks2 fresult
+samplingrate = 125;
+ecg = testht';
+count =0;
+% ecg = ecg*1000; %amp
+ecg=ecg(1:750000);
+%   Remove nan data
+for data = 1:1:length(ecg);
+    if isnan(ecg(data));
+        ecg(data) = ecg(data-1);
+        count = count +1
+    end
+end
+%Script to demonstarte Hilbert Transfom - by Dan Hill 24 April 2010
+% set these
+ecg = (ecg');
+varname = 'ecg'; 
+
+% filename = 'clip_005_truncated.mat';
+
+Fs = 125;
+bp = [0.5 40];
+setpt_func = inline( '(max(x) + min (x)) / 2');
+amp_func  = @range ;
+
+% run this
+% load(filename)
+tic
+x = eval(varname)';
+phase = phase_from_hilbert( x, Fs, bp );
+t = [1:length(x)]/Fs;
+[amp,tops] = get_slow_var(x, phase, amp_func );
+setpt = get_slow_var(x, phase, setpt_func );
+
+reconstruction = setpt + (amp/2).*cos(phase);
+toc
+%
+figure(1)
+ax(1) = subplot(4,1,1);
+plot(t,x,'k',t,reconstruction,'r')
+title(['Data from file: ' DATAFILE ', variable: ' varname ' and reconstruction'])
+ylabel('Angle')
+
+ax(2) = subplot(4,1,2);
+plot(t,x-reconstruction)
+title(['Measured - reconstruction'])
+ylabel('Angle')
+% set(gca,'YLim',[-15 15])
+
+ax(3) = subplot(4,1,3);
+plot(t,phase/pi)
+title('phase');
+ylabel('\pi radians')
+
+ax(4) = subplot(4,1,4);
+plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r',t,setpt-(amp/2),'r')
+for j = 1:length(tops)
+ l(j) =   line( t(tops(j)*[1 1]), x(tops(j)) + 7.5*[-1 1]); 
+end
+title('Midpoint and amplitude');
+ylabel('Angle')
+xlabel('Time (s)')
+set(l,'LineWidth',2','Color',[ 0 0 0])
+set(ax,'XLim',t([1 end]))    
+set(ax([1 4]),'YLim',[0 180])
+set(ax(3),'YLim',[-1 1])
+
+figure(10)
+
+plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r',t,setpt-(amp/2),'r');
+% plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r');
+hold on;
+for j = 1:length(tops)
+%  l(j) =   line( t(tops(j)*[1 1]), x(tops(j)) + 7.5*[-1 1]); 
+ plot(t(tops(j)), x(tops(j)),'go');
+end
+fprintf('Total R-Peak number by Hilbert =%d\n',length(tops));
+
+%% WFDB test on mimicdb - 2017070601
+clc 
+clear
+close all;
+[tm2, signal2]=rdsamp('D:\MIT-BIH\mimicdb\484\48400001',[],75000); % mimicdb maximum database 600 seconds
+[endTime,dateStamp]=wfdbtime('D:\MIT-BIH\mimicdb\484\48400001',75000);
+[ann]=rdann('D:\MIT-BIH\mimicdb\484\484','qrs');
+[ann2]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
+siginfo=wfdbdesc('D:\MIT-BIH\mimicdb\484\48400001');
+% plot(tm2,signal2(:,1));
+% hold on;
+% plot(tm2,signal2(:,7),'r');
+plot(tm2(1:1000),signal2(1:1000,1));
+hold on; grid on
+plot(tm2(1:1000),signal2(1:1000,7),'r');
+% for i = 1:100
+% if ann(i,1) <1000
+%     ann_1000(i) = ann(i,1);
+% end    
+% end
+
+plot(tm2(ann(1:10,1)),signal2(ann(1:10,1),1),'go');
+plot(tm2(ann2(1:10,1)),signal2(ann2(1:10,1),7),'kx');
+
+% plot(signal2(1:1000,1)); hold on; grid on;
+% plot(signal2(1:1000,7),'r');
+% plot(signal2(ann(1:100,1),1),'or');
