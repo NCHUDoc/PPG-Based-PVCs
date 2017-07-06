@@ -2054,7 +2054,7 @@ datanumber= length(testsonchan);
 
 slope_initial_maxi=-2*A(1)-A(2)+A(4)+2*A(5);
 fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
-
+tic
 %算出前125筆資料的slope_initial_maxi
 for i=1:SAMPLE_RATE
     fprintf('data %d =%g\n',i,A(i));
@@ -2101,7 +2101,7 @@ for i=3:datanumber-5
         end
     end
 end
-
+toc
 %     if (k1>120)
 %     {
 %         k1=120;  // 4 secs * 30 frames = 120
@@ -2195,61 +2195,158 @@ varname = 'ecg';
 
 Fs = 125;
 bp = [0.5 40];
-setpt_func = inline( '(max(x) + min (x)) / 2');
-amp_func  = @range ;
+% setpt_func = inline( '(max(x) + min (x)) / 2');
+% amp_func  = @range ;
 
 % run this
 % load(filename)
 tic
 x = eval(varname)';
-phase = phase_from_hilbert( x, Fs, bp );
-t = [1:length(x)]/Fs;
-[amp,tops] = get_slow_var(x, phase, amp_func );
-setpt = get_slow_var(x, phase, setpt_func );
+% [phase, filtered_sig] = phase_from_hilbertt( signal, Fs, bp )
+% phase = phase_from_hilbertt( x, Fs, bp );
+    bp = bp * 2 / Fs; % convert Hz to radians/S
+    [N, Wn] = buttord( bp, bp .* [.5 1.5], 3, 20); 
+    [B,A] = butter(N,Wn);
+    filtered_sig = filtfilt(B,A,x); % zero-phase filtering
+ % remove negative frequency component of fourier transform
+    X = fft(filtered_sig);
+    halfway = 1 + ceil(length(X)/2); 
+    X(  halfway:end) = 0 ;
+    ht_signal = ifft(X);
+    
+    % keep phase
+    phase = angle( ht_signal );
 
-reconstruction = setpt + (amp/2).*cos(phase);
+
+t = [1:length(x)]/Fs;
+% function [out, tops, bottoms] = get_slow_var( sig, p, operation )
+% [amp,tops] = get_slow_var(x, phase, amp_func );
+    tops = find(phase(1:end-1)<0 & phase(2:end)>=0);
+    bottoms = find(phase(1:end-1)>=pi/2 & phase(2:end)<=-pi/2);
+    out = zeros( [1 length(x)] );
+
+    % evaluate at transitions
+    temp = [];
+    pos = [];
+    for j = 2:length(tops)
+        vals =  x( tops(j-1):tops(j) );
+        temp(end+1)  =  range(vals);
+    end
+    if length(tops) > 1
+     pos =    round( tops(1:end-1) + diff(tops)/2);
+    end
+    for j = 2:length(bottoms)
+        vals =  x( bottoms(j-1):bottoms(j) );
+        temp(end+1)  =  range(vals);
+    end
+    if length(bottoms) > 1
+     pos   = [pos round(bottoms(1:end-1) + diff(bottoms)/2)];
+    end
+
+    % sort everything
+     [pos,i] = sort(pos);
+     pos = [1 pos length(x)];
+
+     if isempty(temp)
+         temp = range( x ) * [1 1] ;
+     else
+       temp = [temp(i(1)) temp(i) temp(i(end))];
+     end
+
+    % make piecewise linear signal
+    for j = 2:length(pos)
+        in = pos(j-1):pos(j);
+        out(in) = linspace( temp(j-1), temp(j), length(in) );
+    end
+    
+    
+% function [out, tops, bottoms] = get_slow_var( sig, p, operation ) 
+% setpt = get_slow_var(x, phase, setpt_func );
+
+    tops = find(phase(1:end-1)<0 & phase(2:end)>=0);
+    bottoms = find(phase(1:end-1)>=pi/2 & phase(2:end)<=-pi/2);
+    setpt = zeros( [1 length(x)] );
+
+    % evaluate at transitions
+    temp = [];
+    pos = [];
+    for j = 2:length(tops)
+        vals =  x( tops(j-1):tops(j) );
+        temp(end+1)  =  (max(vals) + min (vals))/ 2;
+    end
+    if length(tops) > 1
+     pos =    round( tops(1:end-1) + diff(tops)/2);
+    end
+    for j = 2:length(bottoms)
+        vals =  x( bottoms(j-1):bottoms(j) );
+        temp(end+1)  =  (max(vals) + min (vals))/ 2;
+    end
+    if length(bottoms) > 1
+     pos   = [pos round(bottoms(1:end-1) + diff(bottoms)/2)];
+    end
+
+    % sort everything
+     [pos,i] = sort(pos);
+     pos = [1 pos length(x)];
+
+     if isempty(temp)
+         temp = ((max(x) + min (x))/ 2) * [1 1] ;
+     else
+       temp = [temp(i(1)) temp(i) temp(i(end))];
+     end
+
+    % make piecewise linear signal
+    for j = 2:length(pos)
+        in = pos(j-1):pos(j);
+        setpt (in) = linspace( temp(j-1), temp(j), length(in) );
+    end
+    
+
+reconstruction = setpt + (out/2).*cos(phase);
 toc
 %
-figure(1)
-ax(1) = subplot(4,1,1);
-plot(t,x,'k',t,reconstruction,'r')
-title(['Data from file: ' DATAFILE ', variable: ' varname ' and reconstruction'])
-ylabel('Angle')
-
-ax(2) = subplot(4,1,2);
-plot(t,x-reconstruction)
-title(['Measured - reconstruction'])
-ylabel('Angle')
+% figure(1)
+% ax(1) = subplot(4,1,1);
+% plot(t,x,'k',t,reconstruction,'r')
+% title(['Data from file: ' DATAFILE ', variable: ' varname ' and reconstruction'])
+% ylabel('Angle')
+% 
+% ax(2) = subplot(4,1,2);
+% plot(t,x-reconstruction)
+% title(['Measured - reconstruction'])
+% ylabel('Angle')
 % set(gca,'YLim',[-15 15])
-
-ax(3) = subplot(4,1,3);
-plot(t,phase/pi)
-title('phase');
-ylabel('\pi radians')
-
-ax(4) = subplot(4,1,4);
-plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r',t,setpt-(amp/2),'r')
-for j = 1:length(tops)
- l(j) =   line( t(tops(j)*[1 1]), x(tops(j)) + 7.5*[-1 1]); 
-end
-title('Midpoint and amplitude');
-ylabel('Angle')
-xlabel('Time (s)')
-set(l,'LineWidth',2','Color',[ 0 0 0])
-set(ax,'XLim',t([1 end]))    
-set(ax([1 4]),'YLim',[0 180])
-set(ax(3),'YLim',[-1 1])
+% 
+% ax(3) = subplot(4,1,3);
+% plot(t,phase/pi)
+% title('phase');
+% ylabel('\pi radians')
+% 
+% ax(4) = subplot(4,1,4);
+% plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r',t,setpt-(amp/2),'r')
+% for j = 1:length(tops)
+%  l(j) =   line( t(tops(j)*[1 1]), x(tops(j)) + 7.5*[-1 1]); 
+% end
+% title('Midpoint and amplitude');
+% ylabel('Angle')
+% xlabel('Time (s)')
+% set(l,'LineWidth',2','Color',[ 0 0 0])
+% set(ax,'XLim',t([1 end]))    
+% set(ax([1 4]),'YLim',[0 180])
+% set(ax(3),'YLim',[-1 1])
 
 figure(10)
 
-plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r',t,setpt-(amp/2),'r');
+plot(t,x,'k',t,setpt,'r',t,setpt+(out/2),'r',t,setpt-(out/2),'r');
 % plot(t,x,'k',t,setpt,'r',t,setpt+(amp/2),'r');
 hold on;
-for j = 1:length(tops)
+% for j = 1:length(tops)
 %  l(j) =   line( t(tops(j)*[1 1]), x(tops(j)) + 7.5*[-1 1]); 
- plot(t(tops(j)), x(tops(j)),'go');
-end
+ plot(t(tops(1:length(tops))), x(tops(1:length(tops))),'go');
+% end
 fprintf('Total R-Peak number by Hilbert =%d\n',length(tops));
+
+
 
 %% WFDB test on mimicdb - 2017070601
 clc 
@@ -2278,3 +2375,12 @@ plot(tm2(ann2(1:10,1)),signal2(ann2(1:10,1),7),'kx');
 % plot(signal2(1:1000,1)); hold on; grid on;
 % plot(signal2(1:1000,7),'r');
 % plot(signal2(ann(1:100,1),1),'or');
+%%
+% c=physionetdb('mitdb',1);
+% Making directory: mitdb to store record files
+% Warning: Directory already exists. 
+% > In physionetdb (line 106) 
+% Downloading record (1 / 47) : mitdb/101
+% Downloading record (2 / 47) : mitdb/102
+%  [ann,type,subtype,chan,num,comments]=rdann(recordName,annotator,C,N,N0,type)
+[ann1,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
