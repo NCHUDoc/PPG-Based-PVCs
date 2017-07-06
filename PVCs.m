@@ -2352,6 +2352,12 @@ fprintf('Total R-Peak number by Hilbert =%d\n',length(tops));
 clc 
 clear
 close all;
+% c=physionetdb('mitdb',1);
+% Making directory: mitdb to store record files
+% Warning: Directory already exists. 
+% > In physionetdb (line 106) 
+% Downloading record (1 / 47) : mitdb/101
+% Downloading record (2 / 47) : mitdb/102
 [tm2, signal2]=rdsamp('D:\MIT-BIH\mimicdb\484\48400001',[],75000); % mimicdb maximum database 600 seconds
 [endTime,dateStamp]=wfdbtime('D:\MIT-BIH\mimicdb\484\48400001',75000);
 [ann]=rdann('D:\MIT-BIH\mimicdb\484\484','qrs');
@@ -2371,16 +2377,231 @@ plot(tm2(1:1000),signal2(1:1000,7),'r');
 
 plot(tm2(ann(1:10,1)),signal2(ann(1:10,1),1),'go');
 plot(tm2(ann2(1:10,1)),signal2(ann2(1:10,1),7),'kx');
+legend('ECG signal of 484', 'PPG signal of 484','QRS annotation' ,'Ple annotation');
 
 % plot(signal2(1:1000,1)); hold on; grid on;
 % plot(signal2(1:1000,7),'r');
 % plot(signal2(ann(1:100,1),1),'or');
-%%
-% c=physionetdb('mitdb',1);
-% Making directory: mitdb to store record files
-% Warning: Directory already exists. 
-% > In physionetdb (line 106) 
-% Downloading record (1 / 47) : mitdb/101
-% Downloading record (2 / 47) : mitdb/102
+%% WFDB tool find mimicdb annotations - 2017070602
+clc;
+clear ;
+
 %  [ann,type,subtype,chan,num,comments]=rdann(recordName,annotator,C,N,N0,type)
-[ann1,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
+[ann100,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
+valleys100=find(ann100(:,1)>450000 & ann100(:,1)<1200000);
+fprintf('Total R-Peak number by MIT-BIH WFDB tool(PPG) =%d\n',length(valleys100));
+
+% clear ;
+% N=75000;
+% gqrs('D:\MIT-BIH\mimicdb\484\48400007',N);
+% ann1=rdann('D:\MIT-BIH\mimicdb\484\48400007','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400008',N);
+% ann2=rdann('D:\MIT-BIH\mimicdb\484\48400008','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400009',N);
+% ann3=rdann('D:\MIT-BIH\mimicdb\484\48400009','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400010',N);
+% ann4=rdann('D:\MIT-BIH\mimicdb\484\48400010','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400011',N);
+% ann5=rdann('D:\MIT-BIH\mimicdb\484\48400011','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400012',N);
+% ann6=rdann('D:\MIT-BIH\mimicdb\484\48400012','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400013',N);
+% ann7=rdann('D:\MIT-BIH\mimicdb\484\48400013','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400014',N);
+% ann8=rdann('D:\MIT-BIH\mimicdb\484\48400014','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400015',N);
+% ann9=rdann('D:\MIT-BIH\mimicdb\484\48400015','qrs',[],N);
+% gqrs('D:\MIT-BIH\mimicdb\484\48400016',N);
+% ann10=rdann('D:\MIT-BIH\mimicdb\484\48400016','qrs',[],N);
+% ann =[ann1(:,1);ann2(:,1);ann3(:,1);ann4(:,1);ann5(:,1);ann6(:,1);ann7(:,1);ann8(:,1);ann9(:,1);ann10(:,1);];
+[ann101,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\484\484','qrs');
+valleys101=find(ann101(:,1)>450000 & ann101(:,1)<1200000);
+
+fprintf('Total R-Peak number by MIT-BIH WFDB tool(ECG) =%d\n',length(valleys101));
+%% Test annotations on record 039  - 2017070603
+clc;
+clear ;
+
+[ann100,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\039\039','ple');
+valleys100=find(ann100(:,1)>450000 & ann100(:,1)<1200000);
+fprintf('Total R-Peak number by MIT-BIH WFDB tool(PPG) =%d\n',length(valleys100));
+[ann101,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\039\039','qrs');
+valleys101=find(ann101(:,1)>450000 & ann101(:,1)<1200000);
+
+[tm2, signal2]=rdsamp('D:\MIT-BIH\mimicdb\039\03900001',[],75000); % mimicdb maximum database 600 seconds
+
+fprintf('Total R-Peak number by MIT-BIH WFDB tool(ECG) =%d\n',length(valleys101));
+
+plot(tm2(1:1000),signal2(1:1000,1));
+hold on; grid on
+plot(tm2(1:1000),signal2(1:1000,3),'r');
+
+plot(tm2(ann100(1:18,1)),signal2(ann100(1:18,1),1),'go');
+plot(tm2(ann101(1:18,1)),signal2(ann101(1:18,1),3),'kx');
+% 
+% plot(tm2(ann100(valleys101,1)),signal2(ann100(valleys100,1),1),'go');
+% plot(tm2(ann101(valleys100),1),signal2(ann100(valleys101,1),3),'kx');
+legend('ECG signal of 039', 'PPG signal of 039','QRS annotation' ,'Ple annotation');
+
+
+%% WFDB test on mimicdb, mark all annotation for 484  - 2017070604
+clc 
+clear
+close all;
+
+[tm7, signal7]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',[],75000); % mimicdb maximum database 600 seconds
+[tm8, signal8]=rdsamp('D:\MIT-BIH\mimicdb\484\48400008',[],75000); % mimicdb maximum database 600 seconds
+[tm9, signal9]=rdsamp('D:\MIT-BIH\mimicdb\484\48400009',[],75000); % mimicdb maximum database 600 seconds
+[tma, signala]=rdsamp('D:\MIT-BIH\mimicdb\484\48400010',[],75000); % mimicdb maximum database 600 seconds
+[tmb, signalb]=rdsamp('D:\MIT-BIH\mimicdb\484\48400011',[],75000); % mimicdb maximum database 600 seconds
+[tmc, signalc]=rdsamp('D:\MIT-BIH\mimicdb\484\48400012',[],75000); % mimicdb maximum database 600 seconds
+[tmd, signald]=rdsamp('D:\MIT-BIH\mimicdb\484\48400013',[],75000); % mimicdb maximum database 600 seconds
+[tme, signale]=rdsamp('D:\MIT-BIH\mimicdb\484\48400014',[],75000); % mimicdb maximum database 600 seconds
+[tmf, signalf]=rdsamp('D:\MIT-BIH\mimicdb\484\48400015',[],75000); % mimicdb maximum database 600 seconds
+[tm1, signal1]=rdsamp('D:\MIT-BIH\mimicdb\484\48400016',[],75000); % mimicdb maximum database 600 seconds
+
+signal7ecg = signal7(:,1);
+signal8ecg = signal8(:,1);
+signal9ecg = signal9(:,1);
+signalaecg = signala(:,1);
+signalbecg = signalb(:,1);
+signalcecg = signalc(:,1);
+signaldecg = signald(:,1);
+signaleecg = signale(:,1);
+signalfecg = signalf(:,1);
+signal1ecg = signal1(:,1);
+
+signal7ppg = signal7(:,7);
+signal8ppg = signal8(:,7);
+signal9ppg = signal9(:,7);
+signalappg = signala(:,7);
+signalbppg = signalb(:,7);
+signalcppg = signalc(:,7);
+signaldppg = signald(:,7);
+signaleppg = signale(:,7);
+signalfppg = signalf(:,7);
+signal1ppg = signal1(:,7);
+
+ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
+ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
+clear signal*
+tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
+[ann484ecg,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
+[ann484ppg,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\484\484','qrs');
+
+valleys484e=find(ann484ecg(:,1)>450000 & ann484ecg(:,1)<1200000);
+valleys484p=find(ann484ppg(:,1)>450000 & ann484ppg(:,1)<1200000);
+ann484ecg_1to2hr40 = ann484ecg(valleys484e);
+ann484ppg_1to2hr40 = ann484ppg(valleys484p);
+ann484ecg_1to2hr40 = ann484ecg_1to2hr40 - 450000;
+ann484ppg_1to2hr40 = ann484ppg_1to2hr40 - 450000;
+
+plot(tmt,ecg_1to2hr);
+hold on; grid on
+plot(tmt,ppg_1to2hr,'r');
+
+
+plot(tmt(ann484ecg_1to2hr40(:,1)),ecg_1to2hr(ann484ecg_1to2hr40(:,1)),'go');
+plot(tmt(ann484ppg_1to2hr40(:,1)),ppg_1to2hr(ann484ppg_1to2hr40(:,1)),'kx');
+%% WFDB test on mimicdb, mark all annotation for 039  - 2017070605
+
+clc 
+clear
+close all;
+
+[tm7, signal7]=rdsamp('D:\MIT-BIH\mimicdb\039\03900007',[],75000); % mimicdb maximum database 600 seconds
+[tm8, signal8]=rdsamp('D:\MIT-BIH\mimicdb\039\03900008',[],75000); % mimicdb maximum database 600 seconds
+[tm9, signal9]=rdsamp('D:\MIT-BIH\mimicdb\039\03900009',[],75000); % mimicdb maximum database 600 seconds
+[tma, signala]=rdsamp('D:\MIT-BIH\mimicdb\039\03900010',[],75000); % mimicdb maximum database 600 seconds
+[tmb, signalb]=rdsamp('D:\MIT-BIH\mimicdb\039\03900011',[],75000); % mimicdb maximum database 600 seconds
+[tmc, signalc]=rdsamp('D:\MIT-BIH\mimicdb\039\03900012',[],75000); % mimicdb maximum database 600 seconds
+[tmd, signald]=rdsamp('D:\MIT-BIH\mimicdb\039\03900013',[],75000); % mimicdb maximum database 600 seconds
+[tme, signale]=rdsamp('D:\MIT-BIH\mimicdb\039\03900014',[],75000); % mimicdb maximum database 600 seconds
+[tmf, signalf]=rdsamp('D:\MIT-BIH\mimicdb\039\03900015',[],75000); % mimicdb maximum database 600 seconds
+[tm1, signal1]=rdsamp('D:\MIT-BIH\mimicdb\039\03900016',[],75000); % mimicdb maximum database 600 seconds
+
+signal7ecg = signal7(:,1);
+signal8ecg = signal8(:,1);
+signal9ecg = signal9(:,1);
+signalaecg = signala(:,1);
+signalbecg = signalb(:,1);
+signalcecg = signalc(:,1);
+signaldecg = signald(:,1);
+signaleecg = signale(:,1);
+signalfecg = signalf(:,1);
+signal1ecg = signal1(:,1);
+
+signal7ppg = signal7(:,3);
+signal8ppg = signal8(:,3);
+signal9ppg = signal9(:,3);
+signalappg = signala(:,3);
+signalbppg = signalb(:,3);
+signalcppg = signalc(:,3);
+signaldppg = signald(:,3);
+signaleppg = signale(:,3);
+signalfppg = signalf(:,3);
+signal1ppg = signal1(:,3);
+
+ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
+ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
+clear signal*
+tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
+[ann484ecg,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\039\039','qrs');
+[ann484ppg,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\039\039','ple');
+
+valleys484e=find(ann484ecg(:,1)>450000 & ann484ecg(:,1)<1200000);
+valleys484p=find(ann484ppg(:,1)>450000 & ann484ppg(:,1)<1200000);
+ann484ecg_1to2hr40 = ann484ecg(valleys484e);
+ann484ppg_1to2hr40 = ann484ppg(valleys484p);
+ann484ecg_1to2hr40 = ann484ecg_1to2hr40 - 450000;
+ann484ppg_1to2hr40 = ann484ppg_1to2hr40 - 450000;
+
+plot(tmt,ecg_1to2hr);
+hold on; grid on
+plot(tmt,ppg_1to2hr,'r');
+
+
+plot(tmt(ann484ecg_1to2hr40(:,1)),ecg_1to2hr(ann484ecg_1to2hr40(:,1)),'go');
+plot(tmt(ann484ppg_1to2hr40(:,1)),ppg_1to2hr(ann484ppg_1to2hr40(:,1)),'kx');
+
+%% findpeaks, mark all peaks for 039  - 2017070606
+samplingrate =125;
+
+peaks = 1;
+for data = 1:length(valleys484p)
+    min = ann484ppg(valleys484p(data))-450000;
+    if length(ppg_1to2hr)-(min)< samplingrate*8/25
+        for i=1:length(ppg_1to2hr)-(min)
+            y(i) = ppg_1to2hr(min+i);
+        end
+    else
+        for i=1:samplingrate*8/25
+            y(i) = ppg_1to2hr(min+i);
+        end
+    end
+    local_max = y(1);
+    local_i_max = 0;
+    for i=2:samplingrate*8/25
+        if  local_max < y(i) 
+            local_i_max = i;
+            local_max= y(i);
+        end
+    end   
+
+local_i_max = min + local_i_max;
+pk(peaks)=local_i_max;
+minpk(peaks)=min;
+peaks=peaks+1;
+end
+j = 1;
+for data = 1:length(pk)-1
+    if pk(data+1) ~= pk(data)
+        pk1(j)=pk(data);
+        j = j+1;
+    end
+end
+plot(ppg_1to2hr);
+hold on;
+
+plot(pk1,ppg_1to2hr(pk1),'ro');
+plot(minpk,ppg_1to2hr(minpk),'kx');
