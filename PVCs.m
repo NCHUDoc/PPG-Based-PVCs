@@ -2504,51 +2504,69 @@ plot(tmt,ppg_1to2hr,'r');
 plot(tmt(ann484ecg_1to2hr40(:,1)),ecg_1to2hr(ann484ecg_1to2hr40(:,1)),'go');
 plot(tmt(ann484ppg_1to2hr40(:,1)),ppg_1to2hr(ann484ppg_1to2hr40(:,1)),'kx');
 %% WFDB test on mimicdb, mark all annotation for 039  - 2017070605
-
+% Optimal for signal storage - Mingfanwei 2017070702
+                                                                     
 clc 
 clear
 close all;
 
-[tm7, signal7]=rdsamp('D:\MIT-BIH\mimicdb\039\03900007',[],75000); % mimicdb maximum database 600 seconds
-[tm8, signal8]=rdsamp('D:\MIT-BIH\mimicdb\039\03900008',[],75000); % mimicdb maximum database 600 seconds
-[tm9, signal9]=rdsamp('D:\MIT-BIH\mimicdb\039\03900009',[],75000); % mimicdb maximum database 600 seconds
-[tma, signala]=rdsamp('D:\MIT-BIH\mimicdb\039\03900010',[],75000); % mimicdb maximum database 600 seconds
-[tmb, signalb]=rdsamp('D:\MIT-BIH\mimicdb\039\03900011',[],75000); % mimicdb maximum database 600 seconds
-[tmc, signalc]=rdsamp('D:\MIT-BIH\mimicdb\039\03900012',[],75000); % mimicdb maximum database 600 seconds
-[tmd, signald]=rdsamp('D:\MIT-BIH\mimicdb\039\03900013',[],75000); % mimicdb maximum database 600 seconds
-[tme, signale]=rdsamp('D:\MIT-BIH\mimicdb\039\03900014',[],75000); % mimicdb maximum database 600 seconds
-[tmf, signalf]=rdsamp('D:\MIT-BIH\mimicdb\039\03900015',[],75000); % mimicdb maximum database 600 seconds
-[tm1, signal1]=rdsamp('D:\MIT-BIH\mimicdb\039\03900016',[],75000); % mimicdb maximum database 600 seconds
+a='D:\MIT-BIH\mimicdb';
+b = '485';
+c = '0';
+d = '\';
+for i=7:16  % signal path
+ if i<10
+   e= [a d b d b c c c c int2str(i)];
+    x{(i-6)}= e;
+ else
+   e= [a d b d b c c c int2str(i)];
+    x{(i-6)}= e;
+  end
+end
+f = [a d b d b];  % annotation path
+ch1=1;    % signal one : ECG
+ch2=7;    % signal one : PPG
 
-signal7ecg = signal7(:,1);
-signal8ecg = signal8(:,1);
-signal9ecg = signal9(:,1);
-signalaecg = signala(:,1);
-signalbecg = signalb(:,1);
-signalcecg = signalc(:,1);
-signaldecg = signald(:,1);
-signaleecg = signale(:,1);
-signalfecg = signalf(:,1);
-signal1ecg = signal1(:,1);
+[tm7, signal7]=rdsamp(x{1},[],75000); % mimicdb maximum database 600 seconds
+[tm8, signal8]=rdsamp(x{2},[],75000); % mimicdb maximum database 600 seconds
+[tm9, signal9]=rdsamp(x{3},[],75000); % mimicdb maximum database 600 seconds
+[tma, signala]=rdsamp(x{4},[],75000); % mimicdb maximum database 600 seconds
+[tmb, signalb]=rdsamp(x{5},[],75000); % mimicdb maximum database 600 seconds
+[tmc, signalc]=rdsamp(x{6},[],75000); % mimicdb maximum database 600 seconds
+[tmd, signald]=rdsamp(x{7},[],75000); % mimicdb maximum database 600 seconds
+[tme, signale]=rdsamp(x{8},[],75000); % mimicdb maximum database 600 seconds
+[tmf, signalf]=rdsamp(x{9},[],75000); % mimicdb maximum database 600 seconds
+[tm1, signal1]=rdsamp(x{10},[],75000); % mimicdb maximum database 600 seconds
 
-signal7ppg = signal7(:,3);
-signal8ppg = signal8(:,3);
-signal9ppg = signal9(:,3);
-signalappg = signala(:,3);
-signalbppg = signalb(:,3);
-signalcppg = signalc(:,3);
-signaldppg = signald(:,3);
-signaleppg = signale(:,3);
-signalfppg = signalf(:,3);
-signal1ppg = signal1(:,3);
+signal7ecg = signal7(:,ch1);
+signal8ecg = signal8(:,ch1);
+signal9ecg = signal9(:,ch1);
+signalaecg = signala(:,ch1);
+signalbecg = signalb(:,ch1);
+signalcecg = signalc(:,ch1);
+signaldecg = signald(:,ch1);
+signaleecg = signale(:,ch1);
+signalfecg = signalf(:,ch1);
+signal1ecg = signal1(:,ch1);
+
+signal7ppg = signal7(:,ch2);
+signal8ppg = signal8(:,ch2);
+signal9ppg = signal9(:,ch2);
+signalappg = signala(:,ch2);
+signalbppg = signalb(:,ch2);
+signalcppg = signalc(:,ch2);
+signaldppg = signald(:,ch2);
+signaleppg = signale(:,ch2);
+signalfppg = signalf(:,ch2);
+signal1ppg = signal1(:,ch2);
 
 ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
 ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
 clear signal*
 tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
-[ann484ecg,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\039\039','qrs');
-[ann484ppg,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\039\039','ple');
-
+[ann484ecg,type1,subtype1,chan1,num1,comm1]=rdann(f,'qrs');
+[ann484ppg,type,subtype,chan,num,comm]=rdann(f,'ple');
+%%
 valleys484e=find(ann484ecg(:,1)>450000 & ann484ecg(:,1)<1200000);
 valleys484p=find(ann484ppg(:,1)>450000 & ann484ppg(:,1)<1200000);
 ann484ecg_1to2hr40 = ann484ecg(valleys484e);
@@ -2605,3 +2623,25 @@ hold on;
 
 plot(pk1,ppg_1to2hr(pk1),'ro');
 plot(minpk,ppg_1to2hr(minpk),'kx');
+
+%% an2rr test  - 2017070607 (Only can use on ECG signal)
+
+clc;
+clear;
+[rr,tm]=ann2rr('D:\MIT-BIH\mimicdb\484\48400007','qrs');
+% [rr,tm]=ann2rr('D:\MIT-BIH\mimicdb\484\48400007','ple');
+[tmt, signal]=rdsamp('D:\MIT-BIH\mimicdb\484\48400007',1,75000); % mimicdb maximum database 600 seconds
+[ann101,type,subtype,chan,num,comm]=rdann('D:\MIT-BIH\mimicdb\484\48400007','qrs');
+
+plot(tmt,signal); hold on; grid on;
+plot(tmt(ann101(:,1)),signal(ann101(:,1)),'ro');
+sum(rr)
+
+%%  bxb test   - 2017070701 
+
+ [refAnn]=rdann('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100','atr');
+ sqrs('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100');
+ [testAnn]=rdann('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100','qrs');
+ report=bxb('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100','atr','qrs','bxbReport.txt');
+ 
+ %%
