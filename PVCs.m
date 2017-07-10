@@ -2653,7 +2653,7 @@ sum(rr)
 clc
 clear
 close all;
-File_name = '408_100.mat';
+File_name = '484_100.mat';
 load(File_name);
 fprintf('Read ')
 fprintf(File_name)
@@ -2680,44 +2680,53 @@ figure,
 samplingrate =125;
 
 peaks = 1;
-% pk_i_min = 1;
-% local_i_max_before = 0;
+if strcmp(File_name , '408_100.mat')
+    pk_i_min = 1;
+    local_i_max_before = 0;
+    threshold = 3/10;
+else
+    threshold = 8/25;
+end
 for data = 1:length(valleys484p)
     min = ann484ppg(valleys484p(data))-450000;
-    if length(ppg_1to2hr)-(min)< samplingrate*8/25
-%     if length(ppg_1to2hr)-(min)< samplingrate*3/10
+    if length(ppg_1to2hr)-(min)< samplingrate*threshold
         for i=1:length(ppg_1to2hr)-(min)
             y(i) = ppg_1to2hr(min+i);
         end
     else
-        for i=1:samplingrate*8/25
-%          for i=1:samplingrate*3/10
+        for i=1:samplingrate*threshold
             y(i) = ppg_1to2hr(min+i);
         end
     end
     local_max = y(1);
     local_i_max = 0;
-    for i=2:samplingrate*8/25
-%     for i=2:samplingrate*3/10
-        if  local_max < y(i) 
+    for i=2:samplingrate*threshold
+        if  local_max < y(i)
             local_i_max = i;
             local_max= y(i);
         end
-    end   
-
-local_i_max = min + local_i_max;
-%     y1 = ppg_1to2hr(local_i_max-5)-ppg_1to2hr(local_i_max-9);
-%     x1 = 4/samplingrate;
-%     long = (y1^2+x1^2)^(1/2);
-%     cosangle = x1/long;
-%     if cosangle < cos((80)/180*pi) && ppg_1to2hr(local_i_max)>=ppg_1to2hr(local_i_max+1)
-	pk(peaks)=local_i_max;
-    minpk(peaks)=min;
-    peaks=peaks+1;
-%     local_i_max_before = local_i_max;
-%     minpk(pk_i_min)=min;
-%     pk_i_min = pk_i_min +1;
-    % Add for peak finding of 408 ^^^^^^^^^^
+    end
+    
+    local_i_max = min + local_i_max;
+    % Add for peak finding of 408 vvvvvvvvvvvvvvvv
+    if strcmp(File_name , '408_100.mat')
+        y1 = ppg_1to2hr(local_i_max-5)-ppg_1to2hr(local_i_max-9);
+        x1 = 4/samplingrate;
+        long = (y1^2+x1^2)^(1/2);
+        cosangle = x1/long;
+        if cosangle < cos((80)/180*pi) && ppg_1to2hr(local_i_max)>=ppg_1to2hr(local_i_max+1)
+            pk(peaks)=local_i_max;
+            peaks=peaks+1;
+            
+        end
+        local_i_max_before = local_i_max;
+        minpk(pk_i_min)=min;
+        pk_i_min = pk_i_min +1;
+    else
+        pk(peaks)=local_i_max;
+        minpk(peaks)=min;
+        peaks=peaks+1;
+    end  
 end
 j = 1;
 for data = 1:length(pk)-1
