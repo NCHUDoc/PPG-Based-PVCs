@@ -2741,3 +2741,83 @@ tm=t1:1/fs:length(signal)/fs;
 if(abs(tm(end)-t2)>0.001)
    error('Could not generate a proper time vector .') %Or maybe warn the user
  end
+%% Find PVCs - 20170710
+
+
+[ann101,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\48400007','qrs');
+[ann102,type2,subtype2,chan2,num2,comm2]=rdann('D:\MIT-BIH\mimicdb\484\48400008','qrs');
+[ann103,type3,subtype3,chan3,num3,comm3]=rdann('D:\MIT-BIH\mimicdb\484\48400009','qrs');
+[ann104,type4,subtype4,chan4,num4,comm4]=rdann('D:\MIT-BIH\mimicdb\484\48400010','qrs');
+[ann105,type5,subtype5,chan5,num5,comm5]=rdann('D:\MIT-BIH\mimicdb\484\48400011','qrs');
+[ann106,type6,subtype6,chan6,num6,comm6]=rdann('D:\MIT-BIH\mimicdb\484\48400012','qrs');
+[ann107,type7,subtype7,chan7,num7,comm7]=rdann('D:\MIT-BIH\mimicdb\484\48400013','qrs');
+[ann108,type8,subtype8,chan8,num8,comm8]=rdann('D:\MIT-BIH\mimicdb\484\48400014','qrs');
+[ann109,type9,subtype9,chan9,num9,comm9]=rdann('D:\MIT-BIH\mimicdb\484\48400015','qrs');
+[ann110,type10,subtype10,chan10,num10,comm10]=rdann('D:\MIT-BIH\mimicdb\484\48400016','qrs');
+ann_total484 = [ann101' ann102' ann103' ann104' ann105' ann106' ann107' ann108' ann109' ann110'];
+length(ann_total484)
+type_total484 = [type1' type2' type3' type4' type5' type6' type7' type8' type9' type10'];
+length(type_total484)
+subtype_total484 = [subtype1' subtype2' subtype3' subtype4' subtype5' subtype6' subtype7' subtype8' subtype9' subtype10'];
+length(subtype_total484)
+chan_total484 = [chan1' chan2' chan3' chan4' chan5' chan6' chan7' chan8' chan9' chan10'];
+length(chan_total484)
+num_total484 = [num1' num2' num3' num4' num5' num6' num7' num8' num9' num10'];
+length(num_total484)
+comm_total484 = [comm1' comm2' comm3' comm4' comm5' comm6' comm7' comm8' comm9' comm10'];
+length(comm_total484)
+
+%%
+
+clc
+clear
+normalbeat = 0;
+abnormalbeat=0;
+abnormalbeattypeII =0;
+abnormalbeattypeIII=0;
+abnormalbeattypeIV=0;
+abnormalbeattypeV=0;
+abnormalbeattypeVI=0;
+[ann484ppg,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\484','ple');
+valleys484p2=find(ann484ppg(:,1)>450000 & ann484ppg(:,1)<1200000);
+valleys484p1=find(ann484ppg(:,1)>0 & ann484ppg(:,1)<450000);
+ann1sthour=length(valleys484p1);
+ann2sthour_100min=length(valleys484p2);
+% abnormal_beat = find(comm1(ann1sthour+1:ann1sthour+ann2sthour_100min) == '1/0');
+PVC_test=comm1(ann1sthour+1:ann1sthour+ann2sthour_100min);
+
+for k = 1:length(PVC_test)
+    switch PVC_test{k}
+        case '0/0'
+            normalbeat=normalbeat+1;
+        case '1/0'
+            abnormalbeat=abnormalbeat+1;
+        case '0/1'
+            abnormalbeattypeII=abnormalbeattypeII+1;
+        case '0/-'
+            abnormalbeattypeIII=abnormalbeattypeIII+1;
+        case '1/-'
+            abnormalbeattypeIV=abnormalbeattypeIV+1;
+        case '1/1'
+            abnormalbeattypeV=abnormalbeattypeV+1;
+        otherwise
+            abnormalbeattypeVI=abnormalbeattypeVI+1;
+    end
+end
+a = [abnormalbeattypeVI  abnormalbeattypeV  abnormalbeattypeIV  abnormalbeattypeIII, abnormalbeattypeII  abnormalbeat  normalbeat]
+t = 1:7;
+plot(t(1),abnormalbeattypeVI,'ro'); hold on;
+plot(t(2),abnormalbeattypeV,'co');
+plot(t(3),abnormalbeattypeIV,'go');
+plot(t(4),abnormalbeattypeIII,'ko');
+plot(t(5),abnormalbeattypeII,'bo');
+plot(t(6),abnormalbeat,'yo');
+plot(t(7),normalbeat,'r+');
+legend ( 'Others', '1/1' , '1/-','0/-','0/1','1/0','0/0');
+xlim([0 8]);
+ylim([-100 10000]);
+x = 1:length(a);
+y = a;
+for i=1:length(a)
+    text(x(i), y(i)+1000, num2str(y(i))) % 可以調整標記的位置!
+end
