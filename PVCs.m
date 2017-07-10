@@ -1119,6 +1119,7 @@ fprintf('data format %d %f %7.4f %3.4f %g %x\n',ecgtotal(1),ecgtotal(1),ecgtotal
 % testwavelet =ecgtotal(1:10000)';
 testwavelet =ecgtotal';
 % testsonchan =ecgtotal(1:10000)';
+tic
 %   Remove nan data
 for data = 1:1:length(testwavelet);
     if isnan(testwavelet(data));
@@ -1250,7 +1251,7 @@ while(num2~=0)
 %當兩R波間隔小于0.4RRmean時,去掉值小的R波
 
 end
-
+toc
 
 %plot result
 figure;
@@ -1384,6 +1385,7 @@ figure,
 plot(ecg,'r'); hold on ;grid on
 plot(corrected,'c-');
 %   Filter - first pass
+tic
 WinSize = floor(samplingrate * 500 / 1000);
 if rem(WinSize,2)==0
     WinSize = WinSize+1;
@@ -1502,6 +1504,7 @@ for data=1:1:length(peaks1)
         peaks1(data) = nan;
     end
 end
+toc
 figure,
 %   Plotting ECG in green
 %   Show peaks in the same picture
@@ -1774,6 +1777,7 @@ end
 % ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
 ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
 % testtotal = ecgtotal';
+tic
 testpan = ecgtotal';
 for data = 1:1:length(testpan);
     if isnan(testpan(data));
@@ -1991,6 +1995,7 @@ THRS_buf1 = [THRS_buf1 THR_SIG1];
  not_nois = 0; %reset parameters
  ser_back = 0;  %reset bandpass param   
 end
+toc
 % overlay on the signals
 figure,
 plot(ecg_h);title('QRS on Filtered Signal');axis tight;
@@ -2644,4 +2649,95 @@ sum(rr)
  [testAnn]=rdann('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100','qrs');
  report=bxb('D:\MIT-BIH\MIT-BIH(Arrhythmia Database)\100','atr','qrs','bxbReport.txt');
  
- %%
+%% findpeaks from Annotation  - 2017070801
+clc
+clear
+close all;
+File_name = '408_100.mat';
+load(File_name);
+fprintf('Read ')
+fprintf(File_name)
+fprintf(' done!!')
+%%
+valleys484e=find(ann484ecg(:,1)>450000 & ann484ecg(:,1)<1200000);
+valleys484p=find(ann484ppg(:,1)>450000 & ann484ppg(:,1)<1200000);
+ann484ecg_1to2hr40 = ann484ecg(valleys484e);
+ann484ppg_1to2hr40 = ann484ppg(valleys484p);
+ann484ecg_1to2hr40 = ann484ecg_1to2hr40 - 450000;
+ann484ppg_1to2hr40 = ann484ppg_1to2hr40 - 450000;
+figure,
+plot(tmt,ecg_1to2hr);
+hold on; grid on
+plot(tmt,ppg_1to2hr,'r');
+
+
+plot(tmt(ann484ecg_1to2hr40(:,1)),ecg_1to2hr(ann484ecg_1to2hr40(:,1)),'go');
+plot(tmt(ann484ppg_1to2hr40(:,1)),ppg_1to2hr(ann484ppg_1to2hr40(:,1)),'kx');
+
+%% Update Algorithm for finding peak from annotation (408) - 2017070802
+
+figure,
+samplingrate =125;
+
+peaks = 1;
+% pk_i_min = 1;
+% local_i_max_before = 0;
+for data = 1:length(valleys484p)
+    min = ann484ppg(valleys484p(data))-450000;
+    if length(ppg_1to2hr)-(min)< samplingrate*8/25
+%     if length(ppg_1to2hr)-(min)< samplingrate*3/10
+        for i=1:length(ppg_1to2hr)-(min)
+            y(i) = ppg_1to2hr(min+i);
+        end
+    else
+        for i=1:samplingrate*8/25
+%          for i=1:samplingrate*3/10
+            y(i) = ppg_1to2hr(min+i);
+        end
+    end
+    local_max = y(1);
+    local_i_max = 0;
+    for i=2:samplingrate*8/25
+%     for i=2:samplingrate*3/10
+        if  local_max < y(i) 
+            local_i_max = i;
+            local_max= y(i);
+        end
+    end   
+
+local_i_max = min + local_i_max;
+%     y1 = ppg_1to2hr(local_i_max-5)-ppg_1to2hr(local_i_max-9);
+%     x1 = 4/samplingrate;
+%     long = (y1^2+x1^2)^(1/2);
+%     cosangle = x1/long;
+%     if cosangle < cos((80)/180*pi) && ppg_1to2hr(local_i_max)>=ppg_1to2hr(local_i_max+1)
+	pk(peaks)=local_i_max;
+    minpk(peaks)=min;
+    peaks=peaks+1;
+%     local_i_max_before = local_i_max;
+%     minpk(pk_i_min)=min;
+%     pk_i_min = pk_i_min +1;
+    % Add for peak finding of 408 ^^^^^^^^^^
+end
+j = 1;
+for data = 1:length(pk)-1
+    if pk(data+1) ~= pk(data)
+        pk1(j)=pk(data);
+        j = j+1;
+    end
+end
+plot(ppg_1to2hr);
+hold on;
+
+plot(pk1,ppg_1to2hr(pk1),'ro');
+plot(minpk,ppg_1to2hr(minpk),'kx');
+
+%%
+
+[tm, signal, fs]=rdsamp('mitdb/100',[],[],[],1);
+t1=tm(1);
+t2=tm(end);
+tm=t1:1/fs:length(signal)/fs;
+if(abs(tm(end)-t2)>0.001)
+   error('Could not generate a proper time vector .') %Or maybe warn the user
+ end
