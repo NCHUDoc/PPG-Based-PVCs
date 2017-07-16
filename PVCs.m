@@ -1107,7 +1107,8 @@ for i = 1:10
 %     ecg{i}(1,:)= ecg_1to2hr(:,i);
    ecg{i}(1,:)= ppg_1to2hr(:,i);
 end
-
+% DATAFILE = '039_100.mat';
+% load (DATAFILE)
 % ecgtotal = [ecg{1}' ecg{2}' ecg{3}' ecg{4}' ecg{5}' ecg{6}' ecg{7}' ecg{8}' ecg{9}' ecg{10}'];
 ecgtotal = [ecg{1} ecg{2} ecg{3} ecg{4} ecg{5} ecg{6} ecg{7} ecg{8} ecg{9} ecg{10}];
 testtotal = ecgtotal';
@@ -1118,6 +1119,7 @@ testtotal = ecgtotal';
 fprintf('data format %d %f %7.4f %3.4f %g %x\n',ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1),ecgtotal(1));
 % testwavelet =ecgtotal(1:10000)';
 testwavelet =ecgtotal';
+% testwavelet =ppg_1to2hr;
 % testsonchan =ecgtotal(1:10000)';
 tic
 %   Remove nan data
@@ -2839,7 +2841,7 @@ end
 clc
 clear
 close all;
-File_name = '484_100.mat';
+File_name = '039_100.mat';
 load(File_name);
 fprintf('Read ')
 fprintf(File_name)
@@ -2852,7 +2854,7 @@ clear
 close all;
 
 a='D:\MIT-BIH\mimicdb';
-b = '484';
+b = '039';
 c = '0';
 d = '\';
 for i=7:16  % signal path
@@ -3009,6 +3011,27 @@ title('PPG Waveform ');
 ylim([min(A)*1.1 max(A)*1.1])
 
 legend('PPG waveform','Pulse-Wave-Peak');
+grid on;
+%% step 4-2 - plot and mark peaks and annotation within 10 seconds
+t = 1250;
+Rt_peak=find(R_peak<1250);
+
+RRI(1:length(Rt_peak));
+
+figure,
+plot(tmt(1:t),A(1:t))
+hold on
+plot(tmt(R_peak(1:length(Rt_peak))),A(R_peak(1:length(Rt_peak))),'ro');
+annppg1_2hr40 = annppg - 450000;
+plot(tmt(annppg1_2hr40(valleysppg(1:length(Rt_peak)+1)),1),A(annppg1_2hr40(valleysppg(1:length(Rt_peak)+1),1)),'kx');
+set(gcf,'color','none');
+
+xlabel('Time (Seconds)');
+ylabel('Voltage(mV)');
+title('484.dat PPG Waveform');
+ylim([min(A)*1.1 max(A)*1.1])
+
+legend('PPG waveform','PulseWave-peak', 'Annotations');
 grid on;
 %% Step 5 - calculate RRI ­pºâRRI  and peak amplitude mean
 for j=2:length(R_peak)-1
