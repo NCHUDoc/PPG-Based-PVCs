@@ -2841,7 +2841,7 @@ end
 clc
 clear
 close all;
-File_name = '039_100.mat';
+File_name = '484_100.mat';
 load(File_name);
 fprintf('Read ')
 fprintf(File_name)
@@ -2854,7 +2854,7 @@ clear
 close all;
 
 a='D:\MIT-BIH\mimicdb';
-b = '039';
+b = '484';
 c = '0';
 d = '\';
 for i=7:16  % signal path
@@ -2871,7 +2871,7 @@ for i=7:16  % signal path
 end
 f = [a d b d b];  % annotation path
 ch1=1;    % signal one : ECG
-ch2=7;    % signal one : PPG
+ch2=3;    % signal one : PPG
 
 [tm7, signal7]=rdsamp(x{1},[],75000); % mimicdb maximum database 600 seconds
 [tm8, signal8]=rdsamp(x{2},[],75000); % mimicdb maximum database 600 seconds
@@ -2908,7 +2908,13 @@ signal1ppg = signal1(:,ch2);
 
 ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
 ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
-%% step 2 - read annotation and calculate annotation from selection signal
+%% step 2 method 1 - read annotation and calculate annotation from selection signal
+% clear signal*
+annecg = ann484ecg;
+annppg = ann484ppg;
+valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
+valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
+%% step 2 method 2 - read annotation and calculate annotation from selection signal
 clear signal*
 tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
 [annecg,type1,subtype1,chan1,num1,comm1]=rdann(f,'qrs');
@@ -3016,7 +3022,7 @@ grid on;
 t = 1250;
 Rt_peak=find(R_peak<1250);
 
-RRI(1:length(Rt_peak));
+% RRI(1:length(Rt_peak));
 
 figure,
 plot(tmt(1:t),A(1:t))
@@ -3024,7 +3030,7 @@ hold on
 plot(tmt(R_peak(1:length(Rt_peak))),A(R_peak(1:length(Rt_peak))),'ro');
 annppg1_2hr40 = annppg - 450000;
 plot(tmt(annppg1_2hr40(valleysppg(1:length(Rt_peak)+1)),1),A(annppg1_2hr40(valleysppg(1:length(Rt_peak)+1),1)),'kx');
-set(gcf,'color','none');
+% set(gcf,'color','none');
 
 xlabel('Time (Seconds)');
 ylabel('Voltage(mV)');
@@ -3043,25 +3049,62 @@ R_peakmean=sum(A(R_peak(1:length(R_peak))))/length(R_peak);
 %% Step 6 - PVCs Calculate Test
 % (RRI(n,1)-RRI(n-1,1))>0.2496585*RRImean  ---> 8137
 % (RRI(n,1)-RRI(n-1,1))>0.2496586*RRImean  ---> 0
+clear PVC_R;
 PVCn = 0;
+Nbeat=0;
+n=0;
+% for j=2:length(RRI)-1
 for j=2:length(RRI)-1
-    if RRI(n-1,1)<RRImean && (RRI(n,1)-RRI(n-1,1))>0.2496585*RRImean
-            PVCn=PVCn+1;
-            PVC_R(PVCn,1)=R_peak(1,n-2);
+    if RRI(j-1,1)<RRImean
+        if(RRI(j,1)-RRI(j-1,1)>0.2*RRImean)
+            if(A(R_peak(1,j))<R_peakmean)
+                PVCn=PVCn+1;
+                PVC_R(PVCn,1)=R_peak(1,j);
+            end
+        end
     else
-       
-%         if  HCr>0.09*sample_rate && ZZZr>0.03*sample_rate && ZZZr<0.09*sample_rate  && ((SumP2r>Area && SumP3r>0.05*Area && SumP3r<0.75*Area) || (SumP2r>0.25*Area && SumP3r<0.05*Area))
-%             
-%         else
-%         
-%             if RRI(n,1)<fix(sample_rate*60/150) && RRImean>fix(sample_rate*60/100)
-% 
-%             else
-%                 if (RRI(n-1,1)<0.85*RRImean && ((Line-A(R_peak(j-2,1)))>0.75*Noise || HBr>HAr))
-%                     PVCn=PVCn+1;
-%                     PVC_R(PVCn,1)=R_peak(j-2,1);
-%                 end
-%             end
-%          end
+        if RRI(j-1,1)>1.8*RRImean
+             PVCn=PVCn+1;
+                PVC_R(PVCn,1)=R_peak(1,j);
+        end
+        Nbeat = Nbeat +1;
+        
+        %         if  HCr>0.09*sample_rate && ZZZr>0.03*sample_rate && ZZZr<0.09*sample_rate  && ((SumP2r>Area && SumP3r>0.05*Area && SumP3r<0.75*Area) || (SumP2r>0.25*Area && SumP3r<0.05*Area))
+        %
+        %         else
+        %
+        %             if RRI(n,1)<fix(sample_rate*60/150) && RRImean>fix(sample_rate*60/100)
+        %
+        %             else
+        %                 if (RRI(n-1,1)<0.85*RRImean && ((Line-A(R_peak(j-2,1)))>0.75*Noise || HBr>HAr))
+        %                     PVCn=PVCn+1;
+        %                     PVC_R(PVCn,1)=R_peak(j-2,1);
+        %                 end
+        %             end
+        %          end
     end
+    n=n+1;
 end
+
+%% Plot Possible PVCs
+pleann=find(strcmp('1/0',comm));
+pleann_1hrto2hr40=find(pleann<max(valleysppg) & pleann>min(valleysppg))
+figure,
+plot(tmt,A)
+hold on
+plot(tmt(R_peak),A(R_peak),'go');
+% plot(tmt(PVC_R),A(PVC_R),'bo','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor',[.49 1 .63]);
+plot(tmt(PVC_R),A(PVC_R),'diamond','MarkerSize',10,'MarkerEdgeColor','r','MarkerFaceColor',[1 0 .63]);
+xlabel('Time(Seconds)');
+ylabel('Voltage(mV)');
+title('PPG Waveform ');
+ylim([min(A)*1.1 max(A)*1.1])
+% Plot 1/0 annotation
+plot(tmt(annppg(pleann(pleann_1hrto2hr40))-450000),A(annppg(pleann(pleann_1hrto2hr40))-450000), 'ro')
+% plot ECG
+ecg_1to2hradd = ecg_1to2hr+0.2;
+plot(tmt,ecg_1to2hradd)
+legend('PPG waveform','Pulse-Wave-Peak',  'Possible PVCs');
+grid on;
+
+%%
