@@ -2830,3 +2830,215 @@ y = a;
 for i=1:length(a)
     text(x(i), y(i)+1000, num2str(y(i))) % 可以調整標記的位置!
 end
+%% 20170713 Test al annotation (alarm)
+[ann101,type1,subtype1,chan1,num1,comm1]=rdann('D:\MIT-BIH\mimicdb\484\48400007','al');
+
+
+%% PVCs finding - 20170713
+% Step 1 , method 1, load data from mat - only from 1 to 2 hour and 40 minutes.
+clc
+clear
+close all;
+File_name = '484_100.mat';
+load(File_name);
+fprintf('Read ')
+fprintf(File_name)
+fprintf(' done!!')
+%%
+% Step 1, method 2, load data with wfdb method, every signal from physionet
+                                                                    
+clc 
+clear
+close all;
+
+a='D:\MIT-BIH\mimicdb';
+b = '484';
+c = '0';
+d = '\';
+for i=7:16  % signal path
+% for i=1:10  
+ if i<10
+   e= [a d b d b c c c c int2str(i)];
+   x{(i-6)}= e;
+%     x{(i)}= e;
+ else
+   e= [a d b d b c c c int2str(i)];
+   x{(i-6)}= e;
+%     x{(i)}= e;
+  end
+end
+f = [a d b d b];  % annotation path
+ch1=1;    % signal one : ECG
+ch2=7;    % signal one : PPG
+
+[tm7, signal7]=rdsamp(x{1},[],75000); % mimicdb maximum database 600 seconds
+[tm8, signal8]=rdsamp(x{2},[],75000); % mimicdb maximum database 600 seconds
+[tm9, signal9]=rdsamp(x{3},[],75000); % mimicdb maximum database 600 seconds
+[tma, signala]=rdsamp(x{4},[],75000); % mimicdb maximum database 600 seconds
+[tmb, signalb]=rdsamp(x{5},[],75000); % mimicdb maximum database 600 seconds
+[tmc, signalc]=rdsamp(x{6},[],75000); % mimicdb maximum database 600 seconds
+[tmd, signald]=rdsamp(x{7},[],75000); % mimicdb maximum database 600 seconds
+[tme, signale]=rdsamp(x{8},[],75000); % mimicdb maximum database 600 seconds
+[tmf, signalf]=rdsamp(x{9},[],75000); % mimicdb maximum database 600 seconds
+[tm1, signal1]=rdsamp(x{10},[],75000); % mimicdb maximum database 600 seconds
+
+signal7ecg = signal7(:,ch1);
+signal8ecg = signal8(:,ch1);
+signal9ecg = signal9(:,ch1);
+signalaecg = signala(:,ch1);
+signalbecg = signalb(:,ch1);
+signalcecg = signalc(:,ch1);
+signaldecg = signald(:,ch1);
+signaleecg = signale(:,ch1);
+signalfecg = signalf(:,ch1);
+signal1ecg = signal1(:,ch1);
+
+signal7ppg = signal7(:,ch2);
+signal8ppg = signal8(:,ch2);
+signal9ppg = signal9(:,ch2);
+signalappg = signala(:,ch2);
+signalbppg = signalb(:,ch2);
+signalcppg = signalc(:,ch2);
+signaldppg = signald(:,ch2);
+signaleppg = signale(:,ch2);
+signalfppg = signalf(:,ch2);
+signal1ppg = signal1(:,ch2);
+
+ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signalcecg' signaldecg' signaleecg' signalfecg' signal1ecg'];
+ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
+%% step 2 - read annotation and calculate annotation from selection signal
+clear signal*
+tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
+[annecg,type1,subtype1,chan1,num1,comm1]=rdann(f,'qrs');
+[annppg,type,subtype,chan,num,comm]=rdann(f,'ple');
+
+valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
+%  valleysppg=find(annppg(:,1)>0 & annppg(:,1)<750000);
+valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
+%  valleysecg=find(annecg(:,1)>0 & annecg(:,1)<750000);
+%% step 3 - so and chan implemented and calculate peaks
+testsonchan=ppg_1to2hr;
+THRESHOLD_PARAM = 8;
+FILTER_PARAMETER = 16;
+SAMPLE_RATE = 125;
+
+j=1;
+first_satisfy=0;
+second_satisfy=0;
+Rget=0;
+counter = 0;
+R_negative=0;
+Max=0;
+postive=0;
+det = 0;
+range = round(SAMPLE_RATE/4);  % modify range from 50 to 30, all 10000 samples can be detected.
+
+
+%讀檔
+
+fprintf('Read data!\n');
+A=testsonchan;
+datanumber= length(testsonchan);
+
+slope_initial_maxi=-2*A(1)-A(2)+A(4)+2*A(5);
+fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+tic
+%算出前125筆資料的slope_initial_maxi
+for i=1:SAMPLE_RATE
+    fprintf('data %d =%g\n',i,A(i));
+    if i>=3
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        K(i)=slope;
+        fprintf('slope = %g\n',slope);
+        if slope > slope_initial_maxi
+            slope_initial_maxi = slope;
+            fprintf('slope_initial_maxi = %g\n',slope_initial_maxi);
+        end
+    end
+end
+fprintf('The slope_initial_maxi = %g\n',slope_initial_maxi);
+slope_maxi=slope_initial_maxi;
+fprintf('slope_maxi = %g\n',slope_maxi);
+
+% Original So and Chan
+
+%    k1=0;
+
+for i=3:datanumber-5
+    if(det<2)     
+        slope=-2*A(i-2)-A(i-1)+A(i+1)+2*A(i+2);
+        if(slope>0)
+            det=det+1;
+        else det=0;
+        end
+    else
+        if(A(i)>A(i+1))
+            if(i<=range)
+                maxi=max(A(1:i+range));
+            elseif(i+range>=datanumber-5)
+                maxi=max(A(i-range:datanumber-5));
+            else
+                maxi=max(A(i-range:i+range));
+            end
+            
+            if (A(i)==maxi)
+                R_peak(j)=i;
+                j=j+1;
+            end
+            det=0;
+        end
+    end
+end
+toc
+
+
+fprintf('Total R-Peak number by So and Chan =%d\n',j-1);
+
+%% step 4 - plot and mark peaks
+for n=1:datanumber
+    time(n,1) = n;
+end
+figure,
+plot(time,A)
+hold on
+% plot(x,A,x,X,'ro');
+plot(R_peak,A(R_peak),'ro');
+xlabel('Time');
+ylabel('Voltage');
+title('PPG Waveform ');
+ylim([min(A)*1.1 max(A)*1.1])
+
+legend('PPG waveform','Pulse-Wave-Peak');
+grid on;
+%% Step 5 - calculate RRI 計算RRI  and peak amplitude mean
+for j=2:length(R_peak)-1
+RRI(j-1,1)=[R_peak(1,j)-R_peak(1,j-1)]/SAMPLE_RATE;
+end
+RRImean = sum(RRI)/length(RRI);
+R_peakmean=sum(A(R_peak(1:length(R_peak))))/length(R_peak);
+
+%% Step 6 - PVCs Calculate Test
+% (RRI(n,1)-RRI(n-1,1))>0.2496585*RRImean  ---> 8137
+% (RRI(n,1)-RRI(n-1,1))>0.2496586*RRImean  ---> 0
+PVCn = 0;
+for j=2:length(RRI)-1
+    if RRI(n-1,1)<RRImean && (RRI(n,1)-RRI(n-1,1))>0.2496585*RRImean
+            PVCn=PVCn+1;
+            PVC_R(PVCn,1)=R_peak(1,n-2);
+    else
+       
+%         if  HCr>0.09*sample_rate && ZZZr>0.03*sample_rate && ZZZr<0.09*sample_rate  && ((SumP2r>Area && SumP3r>0.05*Area && SumP3r<0.75*Area) || (SumP2r>0.25*Area && SumP3r<0.05*Area))
+%             
+%         else
+%         
+%             if RRI(n,1)<fix(sample_rate*60/150) && RRImean>fix(sample_rate*60/100)
+% 
+%             else
+%                 if (RRI(n-1,1)<0.85*RRImean && ((Line-A(R_peak(j-2,1)))>0.75*Noise || HBr>HAr))
+%                     PVCn=PVCn+1;
+%                     PVC_R(PVCn,1)=R_peak(j-2,1);
+%                 end
+%             end
+%          end
+    end
+end
