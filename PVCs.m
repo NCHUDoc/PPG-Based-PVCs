@@ -2841,7 +2841,7 @@ end
 clc
 clear
 close all;
-File_name = '484_100.mat';
+File_name = '484_0100.mat';
 load(File_name);
 fprintf('Read ')
 fprintf(File_name)
@@ -2857,21 +2857,21 @@ a='D:\MIT-BIH\mimicdb';
 b = '484';
 c = '0';
 d = '\';
-for i=7:16  % signal path
+for i=1:10  % signal path
 % for i=1:10  
  if i<10
    e= [a d b d b c c c c int2str(i)];
-   x{(i-6)}= e;
-%     x{(i)}= e;
+%    x{(i-6)}= e;
+    x{(i)}= e;
  else
    e= [a d b d b c c c int2str(i)];
-   x{(i-6)}= e;
-%     x{(i)}= e;
+%    x{(i-6)}= e;
+    x{(i)}= e;
   end
 end
 f = [a d b d b];  % annotation path
 ch1=1;    % signal one : ECG
-ch2=3;    % signal one : PPG
+ch2=7;    % signal one : PPG
 
 [tm7, signal7]=rdsamp(x{1},[],75000); % mimicdb maximum database 600 seconds
 [tm8, signal8]=rdsamp(x{2},[],75000); % mimicdb maximum database 600 seconds
@@ -2910,20 +2910,22 @@ ecg_1to2hr = [ signal7ecg' signal8ecg' signal9ecg' signalaecg' signalbecg' signa
 ppg_1to2hr = [ signal7ppg' signal8ppg' signal9ppg' signalappg' signalbppg' signalcppg' signaldppg' signaleppg' signalfppg' signal1ppg'];
 %% step 2 method 1 - read annotation and calculate annotation from selection signal
 % clear signal*
-annecg = ann484ecg;
-annppg = ann484ppg;
-valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
-valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
+% annecg = ann484ecg;
+% annppg = ann484ppg;
+% valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
+% valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
+ valleysppg=find(annppg(:,1)>0 & annppg(:,1)<750000);
+ valleysecg=find(annecg(:,1)>0 & annecg(:,1)<750000);
 %% step 2 method 2 - read annotation and calculate annotation from selection signal
 clear signal*
 tmt =[tm7(:,1);600*1+tm8(:,1);600*2+tm9(:,1);600*3+tma(:,1);600*4+tmb(:,1);600*5+tmc(:,1);600*6+tmd(:,1);600*7+tme(:,1);600*8+tmf(:,1);600*9+tm1(:,1);];
 [annecg,type1,subtype1,chan1,num1,comm1]=rdann(f,'qrs');
 [annppg,type,subtype,chan,num,comm]=rdann(f,'ple');
 
-valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
-%  valleysppg=find(annppg(:,1)>0 & annppg(:,1)<750000);
-valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
-%  valleysecg=find(annecg(:,1)>0 & annecg(:,1)<750000);
+% valleysppg=find(annppg(:,1)>450000 & annppg(:,1)<1200000);
+ valleysppg=find(annppg(:,1)>0 & annppg(:,1)<750000);
+% valleysecg=find(annecg(:,1)>450000 & annecg(:,1)<1200000);
+ valleysecg=find(annecg(:,1)>0 & annecg(:,1)<750000);
 %% step 3 - so and chan implemented and calculate peaks
 testsonchan=ppg_1to2hr;
 THRESHOLD_PARAM = 8;
@@ -2939,7 +2941,7 @@ R_negative=0;
 Max=0;
 postive=0;
 det = 0;
-range = round(SAMPLE_RATE/4);  % modify range from 50 to 30, all 10000 samples can be detected.
+range = round(SAMPLE_RATE/5);  % modify range from 50 to 30, all 10000 samples can be detected.
 
 
 %ÅªÀÉ
@@ -3100,11 +3102,13 @@ ylabel('Voltage(mV)');
 title('PPG Waveform ');
 ylim([min(A)*1.1 max(A)*1.1])
 % Plot 1/0 annotation
-plot(tmt(annppg(pleann(pleann_1hrto2hr40))-450000),A(annppg(pleann(pleann_1hrto2hr40))-450000), 'ro')
+plot(tmt(annppg(pleann(pleann_1hrto2hr40))),A(annppg(pleann(pleann_1hrto2hr40))), 'ro')
 % plot ECG
 ecg_1to2hradd = ecg_1to2hr+0.2;
 plot(tmt,ecg_1to2hradd)
-legend('PPG waveform','Pulse-Wave-Peak',  'Possible PVCs');
+legend('PPG waveform','Pulse-Wave-Peak',  'Possible PVCs' , 'annotation of plethy');
 grid on;
+
+fprintf('Possible PVCs =%d\n',length(PVC_R));
 
 %%
